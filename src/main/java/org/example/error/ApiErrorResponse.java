@@ -1,5 +1,7 @@
 package org.example.error;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,4 +14,9 @@ public class ApiErrorResponse {
     private String error;
     private String message;
     private String path;
+
+
+    // 🔥 NEW (optional, for debugging)
+    private String exception;
+    private List<String> stackTrace;
 }
