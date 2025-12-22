@@ -9,6 +9,7 @@ import org.example.error.ApiException;
 
 import java.util.UUID;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +30,9 @@ public class TenantService {
             throw new ApiException(400, "Company name must not be empty");
         }
 
-        Tenant existingTenant = repository.findByEmail(tenant.getEmail());
+        Optional<Tenant> existingTenant = repository.findByEmail(tenant.getEmail());
 
-        if (existingTenant != null) {
+        if (existingTenant.isPresent()) {
             throw new ApiException(409, "Tenant already exists with email: " + tenant.getEmail());
         }
 
@@ -45,17 +46,34 @@ public class TenantService {
     }
 
     public Tenant getTenant(String tenantId) {
-        Tenant tenant = repository.findById(tenantId);
-        if (tenant == null) {
+        Optional<Tenant> tenant = repository.findById(tenantId);
+        if (tenant.isEmpty()) {
             throw new ApiException(404, "Tenant not found with id: " + tenantId);
         }
-        return tenant;
+        return tenant.get();
     }
 
     public List<Tenant> getAllTenants() {
-        List<Tenant> tenants = repository.findAll();
-        return tenants;
+        return repository.findAll();
     }
 
-   
+    public Tenant updateTenant(String tenantId, Tenant newTenantInfo) {
+        Optional<Tenant> existingTenant = repository.findById(tenantId);
+        if (existingTenant.isEmpty()) {
+            throw new ApiException(404, "Tenant not found with id: " + tenantId);
+        }
+        newTenantInfo.setTenantId(tenantId);
+        return repository.save(newTenantInfo);
+
+    }
+
+    public Tenant deleteTenant(String tenantId) {
+        Optional<Tenant> existingTenant = repository.findById(tenantId);
+        if (existingTenant.isEmpty()) {
+            throw new ApiException(404, "Tenant not found with id: " + tenantId);
+        }
+        repository.delete(existingTenant.get());
+        return existingTenant.get();
+    }
+
 }
