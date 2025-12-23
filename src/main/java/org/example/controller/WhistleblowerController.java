@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.example.dto.CreateReportRequest;
+import org.example.dto.SendMessageRequest;
 import org.example.model.ApiResponse;
 import org.example.model.ConversationMessage;
 
@@ -93,12 +94,29 @@ public class WhistleblowerController {
                 req.getAttachments());
     }
 
+    // Get Tenant's Reports
     @GetMapping("/tenant/{tenantId}/reports")
     public ResponseEntity<List<WhistleblowerReport>> getReportsByTenant(
             @PathVariable String tenantId) {
 
         return ResponseEntity.ok(
                 conversationService.getAllReportForParticularTenant(tenantId));
+    }
+
+    // Add new message to a report conversation
+    @PostMapping("/reports/{reportId}/messages")
+    public ResponseEntity<ConversationMessage> sendNewMessage(
+            @PathVariable String reportId,
+            @RequestBody SendMessageRequest request) {
+
+        ConversationMessage message = conversationService.addMessage(
+                reportId,
+                request.getSender(),
+                request.getMessage(),
+                request.getAttachments());
+
+        return ResponseEntity.ok(message);
+
     }
 
     // Public – access by secret key
