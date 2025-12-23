@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.example.error.ApiException;
 
 import java.util.UUID;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,8 @@ public class TenantService {
         }
 
         tenant.setTenantId(UUID.randomUUID().toString());
+        tenant.setCreatedAt(Instant.now());
+        tenant.setActive(true);
 
         try {
             return repository.save(tenant);
@@ -58,17 +61,22 @@ public class TenantService {
     }
 
     public Tenant updateTenant(String tenantId, Tenant newTenantInfo) {
-        Optional<Tenant> existingTenant = repository.findById(tenantId);
-        if (existingTenant.isEmpty()) {
-            throw new ApiException(404, "Tenant not found with id: " + tenantId);
-        }
-        newTenantInfo.setTenantId(tenantId);
-        return repository.save(newTenantInfo);
+        Tenant existingTenant = repository.findByTenantId(tenantId)
+                .orElseThrow(() -> new ApiException(404, "Tenant not found with tenantId: " + tenantId));
 
+        // ✅ Update ONLY allowed fields
+        existingTenant.setCompanyName(newTenantInfo.getCompanyName());
+        existingTenant.setEmail(newTenantInfo.getEmail());
+        existingTenant.setActive(newTenantInfo.isActive());
+
+        // ✅ Audit
+        existingTenant.setUpdatedAt(Instant.now());
+
+        return repository.save(existingTenant);
     }
 
     public Tenant deleteTenant(String tenantId) {
-        Optional<Tenant> existingTenant = repository.findById(tenantId);
+        Optional<Tenant> existingTenant = repository.findByTenantId(tenantId);
         if (existingTenant.isEmpty()) {
             throw new ApiException(404, "Tenant not found with id: " + tenantId);
         }
