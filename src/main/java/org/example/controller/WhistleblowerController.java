@@ -17,7 +17,7 @@ public class WhistleblowerController {
     private final TenantService service;
 
     // ? Adding new tenant
-    @PostMapping("/addNewTenant")
+    @PostMapping("/admin/addNewTenant")
     public ResponseEntity<ApiResponse<Tenant>> createTenant(@RequestBody Tenant tenant) {
         Tenant createdTenant = service.createTenant(tenant);
         ApiResponse<Tenant> response = ApiResponse.<Tenant>builder()
@@ -29,9 +29,9 @@ public class WhistleblowerController {
     }
 
     // ? Get tenanat information
-    @GetMapping("/getTenantInfo/{tenantId}")
-    public ResponseEntity<ApiResponse<Tenant>> getTenant(@PathVariable String tenantId) {
-        Tenant tenant = service.getTenant(tenantId);
+    @GetMapping("/admin/getTenantInfo/{_id}")
+    public ResponseEntity<ApiResponse<Tenant>> getTenant(@PathVariable String _id) {
+        Tenant tenant = service.getTenant(_id);
         ApiResponse<Tenant> response = ApiResponse.<Tenant>builder()
                 .status("success")
                 .message("Tenant retrieved successfully")
@@ -41,7 +41,7 @@ public class WhistleblowerController {
     }
 
     // ? get all tenant list
-    @GetMapping("/getAllTenants")
+    @GetMapping("/admin/getAllTenants")
     public ResponseEntity<ApiResponse<List<Tenant>>> getAllTenants() {
         List<Tenant> tenants = service.getAllTenants();
         ApiResponse<List<Tenant>> response = ApiResponse.<List<Tenant>>builder()
@@ -53,7 +53,7 @@ public class WhistleblowerController {
     }
 
     // ? To update tenant
-    @PutMapping("/updateTenant/{tenantId}")
+    @PutMapping("/admin/updateTenant/{tenantId}")
     public ResponseEntity<ApiResponse<Tenant>> updateTenant(@PathVariable String tenantId,
             @RequestBody Tenant newTenantInfo) {
         Tenant updatedTenant = service.updateTenant(tenantId, newTenantInfo);
