@@ -68,27 +68,46 @@ public class ConversationService {
 
         }
 
-        public List<ConversationMessage> getConversation(String secretKey) {
-                WhistleblowerReport report = reportRepo.findBySecretKey(secretKey)
-                                .orElseThrow(() -> new RuntimeException("Invalid secret key"));
-
-                return messageRepo.findByReportIdOrderByCreatedAtAsc(report.getReportId());
-        }
-
+        // Add new conversation message
         public ConversationMessage addMessage(
                         String reportId,
                         MessageSender sender,
                         String message,
                         List<String> attachments) {
-                ConversationMessage msg = ConversationMessage.builder()
-                                .reportId(reportId)
+
+                // 1️⃣ Validate report
+                WhistleblowerReport report = reportRepo.findByReportId(reportId)
+                                .orElseThrow(() -> new ApiException(404, "Report not found with id: " + reportId));
+
+                // 2️⃣ Validate sender
+                if (sender == null) {
+                        throw new ApiException(400, "Message sender must be provided");
+                }
+
+                // 3️⃣ Validate message
+                if (message == null || message.trim().isEmpty()) {
+                        throw new ApiException(400, "Message must not be empty");
+                }
+
+                // 5️⃣ Build message
+                ConversationMessage conversationMessage = ConversationMessage.builder()
+                                .reportId(report.getReportId())
                                 .sender(sender)
                                 .message(message)
                                 .attachments(attachments)
+                                .readOrUnRead(false) // default unread
                                 .createdAt(Instant.now())
                                 .build();
 
-                return messageRepo.save(msg);
+                // 6️⃣ Save message
+                return messageRepo.save(conversationMessage);
+        }
+
+        public List<ConversationMessage> getConversation(String secretKey) {
+                WhistleblowerReport report = reportRepo.findBySecretKey(secretKey)
+                                .orElseThrow(() -> new RuntimeException("Invalid secret key"));
+
+                return messageRepo.findByReportIdOrderByCreatedAtAsc(report.getReportId());
         }
 
 }
