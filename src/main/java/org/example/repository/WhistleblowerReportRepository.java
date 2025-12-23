@@ -13,5 +13,9 @@ public interface WhistleblowerReportRepository
 
     Optional<WhistleblowerReport> findByReportId(String reportId);
     List<WhistleblowerReport> findAllByTenantId(String tenantId);
+     Optional<WhistleblowerReport> findByReportIdAndTenantId(
+            String reportId,
+            String tenantId
+    );
 
 }

@@ -9,4 +9,5 @@ public interface ConversationMessageRepository
         extends MongoRepository<ConversationMessage, String> {
 
     List<ConversationMessage> findByReportIdOrderByCreatedAtAsc(String reportId);
+    
 }
