@@ -124,11 +124,21 @@ public class ConversationService {
                                 .build();
         }
 
-        public List<ConversationMessage> getConversation(String secretKey) {
-                WhistleblowerReport report = reportRepo.findBySecretKey(secretKey)
-                                .orElseThrow(() -> new RuntimeException("Invalid secret key"));
+        public ReportWithConversationResponse getConversationBySecretKey(String secretKey) {
+                // 1️⃣ Validate secret key
+                WhistleblowerReport report = reportRepo
+                                .findBySecretKey(secretKey)
+                                .orElseThrow(() -> new ApiException(404, "Invalid secret key"));
 
-                return messageRepo.findByReportIdOrderByCreatedAtAsc(report.getReportId());
+                // 2️⃣ Fetch messages using reportId
+                List<ConversationMessage> messages = messageRepo.findByReportIdOrderByCreatedAtAsc(
+                                report.getReportId());
+
+                // 3️⃣ Return combined response
+                return ReportWithConversationResponse.builder()
+                                .report(report)
+                                .messages(messages)
+                                .build();
         }
 
 }

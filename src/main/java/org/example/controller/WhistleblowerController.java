@@ -131,9 +131,13 @@ public class WhistleblowerController {
     }
 
     // Public – access by secret key
-    @GetMapping("/{secretKey}")
-    public List<ConversationMessage> getConversation(@PathVariable String secretKey) {
-        return conversationService.getConversation(secretKey);
+    @GetMapping("/report/{secretKey}/conversation")
+    public ResponseEntity<ReportWithConversationResponse> getConversation(
+            @PathVariable String secretKey
+    ) {
+        return ResponseEntity.ok(
+                conversationService.getConversationBySecretKey(secretKey)
+        );
     }
 
 }
