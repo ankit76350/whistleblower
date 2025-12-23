@@ -9,13 +9,10 @@ import java.util.Optional;
 public interface WhistleblowerReportRepository
         extends MongoRepository<WhistleblowerReport, String> {
 
-    Optional<WhistleblowerReport> findBySecretKey(String secretKey);
-
     Optional<WhistleblowerReport> findByReportId(String reportId);
     List<WhistleblowerReport> findAllByTenantId(String tenantId);
-     Optional<WhistleblowerReport> findByReportIdAndTenantId(
-            String reportId,
-            String tenantId
-    );
+    Optional<WhistleblowerReport> findByReportIdAndTenantId(String reportId,String tenantId);
+    Optional<WhistleblowerReport> findBySecretKey(String secretKey);
+
 
 }
