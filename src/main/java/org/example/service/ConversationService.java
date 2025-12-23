@@ -58,6 +58,16 @@ public class ConversationService {
                 return reportRepo.save(report);
         }
 
+        public List<WhistleblowerReport> getAllReportForParticularTenant(String tenantId) {
+                Optional<Tenant> tenant = tenantRepo.findByTenantId(tenantId);
+                if (tenant.isEmpty()) {
+                        throw new ApiException(404, "Tenant not found with id: " + tenantId);
+                }
+
+                return reportRepo.findAllByTenantId(tenantId);
+
+        }
+
         public List<ConversationMessage> getConversation(String secretKey) {
                 WhistleblowerReport report = reportRepo.findBySecretKey(secretKey)
                                 .orElseThrow(() -> new RuntimeException("Invalid secret key"));

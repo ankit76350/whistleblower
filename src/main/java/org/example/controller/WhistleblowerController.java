@@ -93,6 +93,14 @@ public class WhistleblowerController {
                 req.getAttachments());
     }
 
+    @GetMapping("/tenant/{tenantId}/reports")
+    public ResponseEntity<List<WhistleblowerReport>> getReportsByTenant(
+            @PathVariable String tenantId) {
+
+        return ResponseEntity.ok(
+                conversationService.getAllReportForParticularTenant(tenantId));
+    }
+
     // Public – access by secret key
     @GetMapping("/{secretKey}")
     public List<ConversationMessage> getConversation(@PathVariable String secretKey) {
