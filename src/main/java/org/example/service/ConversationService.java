@@ -2,6 +2,7 @@ package org.example.service;
 
 import lombok.RequiredArgsConstructor;
 
+import org.example.dto.ReportWithConversationResponse;
 import org.example.error.ApiException;
 import org.example.model.*;
 import org.example.repository.*;
@@ -101,6 +102,26 @@ public class ConversationService {
 
                 // 6️⃣ Save message
                 return messageRepo.save(conversationMessage);
+        }
+
+        // Todo: for admin
+        public ReportWithConversationResponse getReportWithConversation(
+                        String tenantId,
+                        String reportId) {
+
+                Tenant tenant = tenantRepo.findByTenantId(tenantId)
+                                .orElseThrow(() -> new ApiException(404, "Invalid tenantId"));
+
+                WhistleblowerReport report = reportRepo
+                                .findByReportIdAndTenantId(reportId, tenantId)
+                                .orElseThrow(() -> new ApiException(404, "Report not found for this tenant"));
+
+                List<ConversationMessage> messages = messageRepo.findByReportIdOrderByCreatedAtAsc(reportId);
+
+                return ReportWithConversationResponse.builder()
+                                .report(report)
+                                .messages(messages)
+                                .build();
         }
 
         public List<ConversationMessage> getConversation(String secretKey) {
