@@ -11,6 +11,8 @@ import org.example.dto.CreateReportRequest;
 import org.example.dto.SendMessageRequest;
 import org.example.model.ApiResponse;
 import org.example.model.ConversationMessage;
+import org.example.dto.ReportWithConversationResponse; 
+
 
 import java.util.List;
 
@@ -117,6 +119,15 @@ public class WhistleblowerController {
 
         return ResponseEntity.ok(message);
 
+    }
+
+    //Todo: 
+    @GetMapping("/{tenantId}/report/{reportId}/conversation")
+    public ResponseEntity<ReportWithConversationResponse> getReportConversation(
+            @PathVariable String tenantId,
+            @PathVariable String reportId) {
+        return ResponseEntity.ok(
+                conversationService.getReportWithConversation(tenantId, reportId));
     }
 
     // Public – access by secret key
