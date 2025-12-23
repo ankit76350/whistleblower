@@ -1,11 +1,15 @@
 package org.example.controller;
 
 import org.example.model.Tenant;
+import org.example.model.WhistleblowerReport;
+import org.example.service.ConversationService;
 import org.example.service.TenantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.example.dto.CreateReportRequest;
 import org.example.model.ApiResponse;
+import org.example.model.ConversationMessage;
 
 import java.util.List;
 
@@ -75,6 +79,24 @@ public class WhistleblowerController {
                 .data(deletedTenant)
                 .build();
         return ResponseEntity.ok(response);
+    }
+
+    private final ConversationService conversationService;
+
+    // Public – anonymous submit
+    @PostMapping("/anonymous/submitNewReport")
+    public WhistleblowerReport createReport(@RequestBody CreateReportRequest req) {
+        return conversationService.createReport(
+                req.getTenantId(),
+                req.getSubject(),
+                req.getMessage(),
+                req.getAttachments());
+    }
+
+    // Public – access by secret key
+    @GetMapping("/{secretKey}")
+    public List<ConversationMessage> getConversation(@PathVariable String secretKey) {
+        return conversationService.getConversation(secretKey);
     }
 
 }
