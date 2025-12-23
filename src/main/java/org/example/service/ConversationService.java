@@ -1,6 +1,8 @@
 package org.example.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.example.error.ApiException;
 import org.example.model.*;
 import org.example.repository.*;
 import org.example.utility.SecretKeyGenerator;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -17,12 +20,26 @@ public class ConversationService {
 
         private final WhistleblowerReportRepository reportRepo;
         private final ConversationMessageRepository messageRepo;
+        private final TenantRepository tenantRepo;
 
         public WhistleblowerReport createReport(
                         String tenantId,
                         String subject,
                         String message,
                         List<String> attachments) {
+
+                Optional<Tenant> tenant = tenantRepo.findByTenantId(tenantId);
+
+                if (tenant.isEmpty()) {
+                        throw new ApiException(404, "Tenant not found with id: " + tenantId);
+                }
+                if (subject == null || subject.trim().isEmpty()) {
+                        throw new ApiException(400, "Subject must not be empty");
+                }
+                if (message == null || message.trim().isEmpty()) {
+                        throw new ApiException(400, "Message must not be empty");
+                }
+
                 Instant now = Instant.now();
 
                 WhistleblowerReport report = WhistleblowerReport.builder()
