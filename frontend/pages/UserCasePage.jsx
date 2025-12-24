@@ -7,6 +7,7 @@ import { api } from '../services/api';
 import { useStore } from '../store';
 import AttachmentInput from '../components/AttachmentInput';
 import StatusBadge from '../components/StatusBadge';
+// Removed import from types
 
 const UserCasePage = () => {
   const { id } = useParams();
