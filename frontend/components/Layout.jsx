@@ -1,0 +1,73 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Shield, Lock, Briefcase } from 'lucide-react';
+import { useStore } from '../store';
+
+const Layout = ({ children }) => {
+  const { isAdminMode, toggleAdminMode } = useStore();
+  const location = useLocation();
+
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  return (
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center space-x-2 group">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center group-hover:bg-blue-700 transition-colors">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-800 tracking-tight">WB<span className="text-blue-600">Box</span></span>
+          </Link>
+
+          <div className="flex items-center space-x-4">
+            <Link
+              to="/check"
+              className={`text-sm font-medium transition-colors ${location.pathname === '/check' ? 'text-blue-600' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+              Check Status
+            </Link>
+
+            {/* Admin Toggle for Demo Purposes */}
+            <button
+              onClick={toggleAdminMode}
+              className={`flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${isAdminMode ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+            >
+              <Briefcase className="w-3 h-3 mr-1" />
+              {isAdminMode ? 'Admin Active' : 'Admin View'}
+            </button>
+
+            {isAdminMode && (
+              <Link to="/admin/inbox" className="text-sm font-medium text-slate-600 hover:text-blue-600">
+                Inbox
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-grow w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {isAdminRoute && !isAdminMode ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <Lock className="w-12 h-12 text-slate-300 mb-4" />
+            <h2 className="text-xl font-semibold text-slate-700">Access Restricted</h2>
+            <p className="text-slate-500 mt-2">Please enable Admin Mode (top right) to view this area.</p>
+          </div>
+        ) : (
+          children
+        )}
+      </main>
+
+      <footer className="bg-white border-t border-slate-200 py-6 mt-auto">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <p className="text-xs text-slate-400">
+            Secure Whistleblower System (HinSchG Compliant).
+            <span className="block mt-1">No IP logging. No cookies. End-to-end anonymity designed.</span>
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Layout;

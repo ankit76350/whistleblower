@@ -1,0 +1,5 @@
+{
+  "name": "Whistleblower Box",
+  "description": "A secure, anonymous internal reporting system compliant with HinSchG, featuring secret key access and deadline tracking.",
+  "requestFramePermissions": []
+}
