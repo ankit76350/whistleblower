@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Send, ArrowLeft, Shield } from 'lucide-react';
+import { Send, ArrowLeft, Shield, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
 import { ReportStatus } from '../services/mockBackend';
 import StatusBadge from '../components/StatusBadge';
 import AttachmentInput from '../components/AttachmentInput';
+import Modal from '../components/Modal';
 
 const AdminCasePage = () => {
   const { id } = useParams();
@@ -15,6 +16,10 @@ const AdminCasePage = () => {
 
   const [replyText, setReplyText] = useState('');
   const [files, setFiles] = useState([]);
+
+  // Status change confirmation state
+  const [pendingStatus, setPendingStatus] = useState(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['report-admin', id],
@@ -37,10 +42,30 @@ const AdminCasePage = () => {
       toast.success('Status updated');
       queryClient.invalidateQueries({ queryKey: ['report-admin', id] });
       queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
+      setShowStatusModal(false);
+      setPendingStatus(null);
     }
   });
 
   if (isLoading || !report) return <div className="p-10 text-center">Loading case...</div>;
+
+  const handleStatusSelect = (newStatus) => {
+    if (newStatus === report.status) return;
+
+    // Show warning for final statuses
+    if (newStatus === ReportStatus.Closed || newStatus === ReportStatus.Canceled) {
+      setPendingStatus(newStatus);
+      setShowStatusModal(true);
+    } else {
+      statusMutation.mutate(newStatus);
+    }
+  };
+
+  const confirmStatusChange = () => {
+    if (pendingStatus) {
+      statusMutation.mutate(pendingStatus);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -67,11 +92,11 @@ const AdminCasePage = () => {
           <span className="text-sm font-medium text-slate-700">Status:</span>
           <select
             value={report.status}
-            onChange={(e) => statusMutation.mutate(e.target.value)}
+            onChange={(e) => handleStatusSelect(e.target.value)}
             className="border border-slate-300 rounded-lg py-2 pl-3 pr-8 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white font-medium"
           >
             {Object.values(ReportStatus).map(s => (
-              <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+              <option key={s} value={s}>{s.replace(/([A-Z])/g, ' $1').trim()}</option>
             ))}
           </select>
         </div>
@@ -131,6 +156,31 @@ const AdminCasePage = () => {
           </button>
         </div>
       </div>
+
+      {/* Status Change Confirmation Modal */}
+      <Modal
+        isOpen={showStatusModal}
+        onClose={() => { setShowStatusModal(false); setPendingStatus(null); }}
+        onConfirm={confirmStatusChange}
+        isLoading={statusMutation.isPending}
+        title={`Set status to ${pendingStatus}?`}
+        type="warning"
+        confirmLabel={`Confirm ${pendingStatus}`}
+        message={
+          <div className="space-y-3">
+            <div className="flex gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 text-sm">
+              <AlertTriangle className="w-6 h-6 flex-shrink-0" />
+              <p>
+                Setting a case to <strong>{pendingStatus}</strong> typically signals the end of the investigation.
+                The whistleblower will see this update immediately using their Secret Key.
+              </p>
+            </div>
+            <p className="text-slate-600 text-sm">
+              Are you sure you want to mark this case as <strong>{pendingStatus}</strong>?
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 };

@@ -2,38 +2,42 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { Lock, Send, ShieldCheck, Info } from 'lucide-react';
+import { Lock, ShieldCheck, Info, AlertTriangle } from 'lucide-react';
 import { api } from '../services/api';
 import AttachmentInput from '../components/AttachmentInput';
+import Modal from '../components/Modal';
 
 const ReportingFormPage = () => {
   const navigate = useNavigate();
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const mutation = useMutation({
     mutationFn: async () => {
       return api.createReport(subject, message, files);
     },
     onSuccess: (data) => {
-      // Navigate to success page with secret key
-      // We pass the key in state to avoid putting it in URL query params if possible, 
-      // but query params are requested by the prompt structure "GET /thanks?secret_key=XXX"
-      // I will follow the prompt's URL structure for strict compliance.
+      setShowConfirmModal(false);
       navigate(`/thanks?secret_key=${data.secret_key}`);
     },
     onError: () => {
+      setShowConfirmModal(false);
       toast.error('Failed to submit report. Please try again.');
     },
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmitAttempt = (e) => {
     e.preventDefault();
     if (!subject.trim() || message.length < 10) {
-      toast.error('Please fill in all required fields.');
+      toast.error('Please fill in all required fields (Message min 10 chars).');
       return;
     }
+    setShowConfirmModal(true);
+  };
+
+  const handleFinalSubmit = () => {
     mutation.mutate();
   };
 
@@ -54,7 +58,7 @@ const ReportingFormPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmitAttempt} className="space-y-6">
           <div>
             <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-1">
               Subject <span className="text-red-500">*</span>
@@ -104,29 +108,41 @@ const ReportingFormPage = () => {
             <button
               type="submit"
               disabled={mutation.isPending}
-              className={`
-                w-full flex items-center justify-center py-3 px-4 rounded-xl text-white font-semibold text-lg shadow-md hover:shadow-lg transition-all
-                ${mutation.isPending ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'}
-              `}
+              className="w-full flex items-center justify-center py-3 px-4 rounded-xl text-white font-semibold text-lg shadow-md hover:shadow-lg transition-all bg-slate-900 hover:bg-slate-800"
             >
-              {mutation.isPending ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Encrypting & Sending...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <Lock className="w-5 h-5 mr-2" />
-                  Submit Securely
-                </span>
-              )}
+              <Lock className="w-5 h-5 mr-2" />
+              Submit Securely
             </button>
           </div>
         </form>
       </div>
+
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleFinalSubmit}
+        isLoading={mutation.isPending}
+        title="Submit this report?"
+        type="warning"
+        confirmLabel="Yes, Submit Encrypted"
+        message={
+          <div className="space-y-4">
+            <p>You are about to submit an anonymous report regarding:</p>
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+              <span className="text-xs font-bold text-slate-400 uppercase block">Subject</span>
+              <span className="text-sm font-semibold text-slate-800">{subject}</span>
+            </div>
+            <div className="flex gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 text-xs">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+              <p>
+                <strong>IMPORTANT:</strong> On the next screen, you will receive a <strong>Secret Key</strong>.
+                You MUST save it. It is the only way to check for replies or updates.
+                We cannot recover it for you.
+              </p>
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 };
