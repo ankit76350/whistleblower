@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Lock, Briefcase } from 'lucide-react';
+import { Shield, Lock, Briefcase, Users } from 'lucide-react';
 import { useStore } from '../store';
 
 const Layout = ({ children }) => {
@@ -38,9 +38,15 @@ const Layout = ({ children }) => {
             </button>
 
             {isAdminMode && (
-              <Link to="/admin/inbox" className="text-sm font-medium text-slate-600 hover:text-blue-600">
-                Inbox
-              </Link>
+              <div className="flex items-center space-x-3 border-l border-slate-200 pl-4 ml-4">
+                <Link to="/admin/inbox" className={`text-sm font-medium ${location.pathname.includes('/admin/inbox') ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>
+                  Inbox
+                </Link>
+                <Link to="/admin/tenants" className={`text-sm font-medium flex items-center ${location.pathname === '/admin/tenants' ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>
+                  <Users className="w-4 h-4 mr-1" />
+                  Tenants
+                </Link>
+              </div>
             )}
           </div>
         </div>

@@ -9,6 +9,7 @@ import SecretKeyLoginPage from './pages/SecretKeyLoginPage';
 import UserCasePage from './pages/UserCasePage';
 import AdminInboxPage from './pages/AdminInboxPage';
 import AdminCasePage from './pages/AdminCasePage';
+import AdminTenantsPage from './pages/AdminTenantsPage';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => {
             <Route path="/admin" element={<Navigate to="/admin/inbox" replace />} />
             <Route path="/admin/inbox" element={<AdminInboxPage />} />
             <Route path="/admin/case/:id" element={<AdminCasePage />} />
+            <Route path="/admin/tenants" element={<AdminTenantsPage />} />
           </Routes>
         </Layout>
       </HashRouter>

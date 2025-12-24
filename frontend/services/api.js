@@ -1,12 +1,5 @@
 import { MockBackend } from './mockBackend';
 
-/**
- * In a real implementation, these functions would use axios or fetch with:
- * credentials: 'omit'
- * headers: { 'Content-Type': 'application/json' }
- * No Authorization headers for public endpoints.
- */
-
 // Helper to convert File object to Base64 for mock storage
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -60,5 +53,22 @@ export const api = {
 
   updateReportStatus: async (reportId, status) => {
     return MockBackend.updateStatus(reportId, status);
+  },
+
+  // Tenant Management
+  getTenants: async () => {
+    return MockBackend.getTenants();
+  },
+
+  createTenant: async (email, companyName) => {
+    return MockBackend.createTenant(email, companyName);
+  },
+
+  updateTenant: async (id, data) => {
+    return MockBackend.updateTenant(id, data);
+  },
+
+  deleteTenant: async (id) => {
+    return MockBackend.deleteTenant(id);
   }
 };
