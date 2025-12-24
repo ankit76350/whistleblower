@@ -66,8 +66,8 @@ const AdminInboxPage = () => {
             >
               <option value="All">All Statuses</option>
               <option value={ReportStatus.New}>New</option>
+              <option value={ReportStatus.Received}>Received</option>
               <option value={ReportStatus.InProgress}>In Progress</option>
-              <option value={ReportStatus.Resolved}>Resolved</option>
               <option value={ReportStatus.Closed}>Closed</option>
             </select>
           </div>

@@ -1,15 +1,30 @@
-const STORAGE_KEY = 'whistleblower_db_v1';
 
 export const ReportStatus = {
-  New: 'new',
-  InProgress: 'in_progress',
-  Resolved: 'resolved',
-  Closed: 'closed'
+  New: 'New',
+  Received: 'Received',
+  InProgress: 'InProgress',
+  Closed: 'Closed',
+  Canceled: 'Canceled',
 };
+
+const STORAGE_KEY = 'whistleblower_db_v1';
+const TENANTS_STORAGE_KEY = 'whistleblower_tenants_v1';
 
 // Initialize storage if empty
 if (!localStorage.getItem(STORAGE_KEY)) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+}
+if (!localStorage.getItem(TENANTS_STORAGE_KEY)) {
+  localStorage.setItem(TENANTS_STORAGE_KEY, JSON.stringify([
+    {
+      _id: "694a29bceaca6f2dc610196a",
+      tenantId: "5a1155c8-3058-4f73-ba5c-48c4e782c434",
+      email: "ankit@dsv.au.com",
+      companyName: "DSV Corp3",
+      active: true,
+      createdAt: "2025-12-23T05:33:48.918+00:00"
+    }
+  ]));
 }
 
 const getDB = () => {
@@ -21,7 +36,22 @@ const saveDB = (data) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
+const getTenantsDB = () => {
+  const data = localStorage.getItem(TENANTS_STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+};
+
+const saveTenantsDB = (data) => {
+  localStorage.setItem(TENANTS_STORAGE_KEY, JSON.stringify(data));
+};
+
 const generateId = () => Math.random().toString(36).substr(2, 9);
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 const generateSecretKey = () => {
   const array = new Uint8Array(32);
   window.crypto.getRandomValues(array);
@@ -59,6 +89,7 @@ export const MockBackend = {
     return { report_id, secret_key, created_at };
   },
 
+  // Use LookupResponse type here for clarity and consistency with api.ts
   lookupReport: async (secret_key) => {
     await new Promise((r) => setTimeout(r, 500));
     const db = getDB();
@@ -73,7 +104,6 @@ export const MockBackend = {
     await new Promise((r) => setTimeout(r, 400));
     const db = getDB();
     const report = db.find((r) => r.report_id === report_id);
-    // In a real app, we would validate the secret key or session token here.
     return report || null;
   },
 
@@ -93,7 +123,6 @@ export const MockBackend = {
 
     db[index].messages.push(newMessage);
 
-    // Auto-update status if admin replies to New report
     if (from === 'admin' && db[index].status === ReportStatus.New) {
       db[index].status = ReportStatus.InProgress;
     }
@@ -116,4 +145,44 @@ export const MockBackend = {
     await new Promise((r) => setTimeout(r, 400));
     return getDB();
   },
+
+  // Tenant Operations
+  getTenants: async () => {
+    await new Promise((r) => setTimeout(r, 500));
+    return getTenantsDB();
+  },
+
+  createTenant: async (email, companyName) => {
+    await new Promise((r) => setTimeout(r, 700));
+    const tenants = getTenantsDB();
+    const newTenant = {
+      _id: Math.random().toString(16).substr(2, 24),
+      tenantId: generateUUID(),
+      email,
+      companyName,
+      active: true,
+      createdAt: new Date().toISOString()
+    };
+    tenants.push(newTenant);
+    saveTenantsDB(tenants);
+    return newTenant;
+  },
+
+  updateTenant: async (id, data) => {
+    await new Promise((r) => setTimeout(r, 400));
+    const tenants = getTenantsDB();
+    const index = tenants.findIndex(t => t._id === id);
+    if (index === -1) throw new Error('Tenant not found');
+
+    tenants[index] = { ...tenants[index], ...data };
+    saveTenantsDB(tenants);
+    return tenants[index];
+  },
+
+  deleteTenant: async (id) => {
+    await new Promise((r) => setTimeout(r, 400));
+    const tenants = getTenantsDB();
+    const filtered = tenants.filter(t => t._id !== id);
+    saveTenantsDB(filtered);
+  }
 };
