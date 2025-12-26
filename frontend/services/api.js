@@ -70,16 +70,42 @@ export const api = {
     }
   },
 
-  replyToReport: async (reportId, text, from, files) => {
-    const attachmentData = await Promise.all(
-      files.map(async (f) => ({
-        name: f.name,
-        size: f.size,
-        type: f.type,
-        dataUrl: await fileToBase64(f),
-      }))
-    );
-    return MockBackend.postReply(reportId, text, from, attachmentData);
+  replyToReport: async (reportId, message, sender = 'COMPLIANCE_TEAM', files) => {
+    try {
+      // Process attachments if any
+      const attachmentData = files && files.length > 0
+        ? await Promise.all(
+          files.map(async (f) => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+            dataUrl: await fileToBase64(f),
+          }))
+        )
+        : null;
+
+      const response = await fetch(`http://localhost:8080/whistleblower/reports/${reportId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender,
+          message,
+          attachments: attachmentData,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send reply');
+      }
+
+      const data = await response.json();
+      return data; // Returns: { id, reportId, sender, message, attachments, readOrUnRead, createdAt }
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      throw error;
+    }
   },
 
   // Admin specific

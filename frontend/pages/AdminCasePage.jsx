@@ -50,7 +50,7 @@ const AdminCasePage = () => {
   });
 
   const replyMutation = useMutation({
-    mutationFn: () => api.replyToReport(id, replyText, 'admin', files),
+    mutationFn: () => api.replyToReport(id, replyText, 'COMPLIANCE_TEAM', files),
     onSuccess: () => {
       setReplyText('');
       setFiles([]);
