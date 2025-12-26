@@ -122,7 +122,7 @@ public class WhistleblowerController {
         }
 
         // Todo:
-        @GetMapping("/{tenantId}/report/{reportId}/conversation")
+        @GetMapping("/tenant/{tenantId}/report/{reportId}/conversation")
         public ResponseEntity<ReportWithConversationResponse> getReportConversation(
                         @PathVariable String tenantId,
                         @PathVariable String reportId) {
