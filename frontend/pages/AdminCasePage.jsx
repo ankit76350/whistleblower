@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Send, ArrowLeft, Shield, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
-import { ReportStatus } from '../services/mockBackend';
+
 import StatusBadge from '../components/StatusBadge';
 import AttachmentInput from '../components/AttachmentInput';
 import Modal from '../components/Modal';
@@ -24,6 +24,12 @@ const BackendStatus = {
 // Convert Unix timestamp (seconds) to date string
 const formatDate = (timestamp) => {
   return new Date(timestamp * 1000).toLocaleString();
+};
+
+// Convert backend status (e.g., IN_PROGRESS) to human-readable format
+const formatStatus = (status) => {
+  if (!status) return '';
+  return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/\B\w+/g, c => c.toLowerCase());
 };
 
 const AdminCasePage = () => {
