@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Lock, ShieldCheck, Info, AlertTriangle } from 'lucide-react';
@@ -14,10 +14,14 @@ const ReportingFormPage = () => {
   const [files, setFiles] = useState([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  // Get tenant ID from URL params
+  const { tenantId } = useParams();
+
   const mutation = useMutation({
     mutationFn: async () => {
-      // Get tenant ID from environment variable or use a default for testing
-      const tenantId = import.meta.env.VITE_TENANT_ID || '6ce19dbb-84d7-490a-95a1-d935545d4898';
+      if (!tenantId) {
+        throw new Error('No tenant ID provided');
+      }
       return api.createReport(tenantId, subject, message, files);
     },
     onSuccess: (data) => {

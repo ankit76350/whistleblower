@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
+import LandingPage from './pages/LandingPage';
 import ReportingFormPage from './pages/ReportingFormPage';
 import ThankYouPage from './pages/ThankYouPage';
 import SecretKeyLoginPage from './pages/SecretKeyLoginPage';
@@ -20,7 +21,8 @@ const App = () => {
         <Layout>
           <Routes>
             {/* Public Reporter Routes */}
-            <Route path="/" element={<ReportingFormPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/company/:tenantId/report" element={<ReportingFormPage />} />
             <Route path="/thanks" element={<ThankYouPage />} />
             <Route path="/check" element={<SecretKeyLoginPage />} />
             <Route path="/case/:id" element={<UserCasePage />} />
