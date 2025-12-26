@@ -57,18 +57,71 @@ export const api = {
 
   // Tenant Management
   getTenants: async () => {
-    return MockBackend.getTenants();
+    try {
+      const response = await fetch('http://localhost:8080/whistleblower/admin/getAllTenants');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      return data.data; // Backend returns ApiResponse wrapper with data field
+    } catch (error) {
+      console.error('Error fetching tenants:', error);
+      throw error;
+    }
   },
 
   createTenant: async (email, companyName) => {
-    return MockBackend.createTenant(email, companyName);
+    try {
+      const response = await fetch('http://localhost:8080/whistleblower/admin/addNewTenant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, companyName }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create tenant');
+      }
+      const data = await response.json();
+      return data.data; // Backend returns ApiResponse wrapper with data field
+    } catch (error) {
+      console.error('Error creating tenant:', error);
+      throw error;
+    }
   },
 
-  updateTenant: async (id, data) => {
-    return MockBackend.updateTenant(id, data);
+  updateTenant: async (tenantId, data) => {
+    try {
+      const response = await fetch(`http://localhost:8080/whistleblower/admin/updateTenant/${tenantId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update tenant');
+      }
+      const result = await response.json();
+      return result.data; // Backend returns ApiResponse wrapper with data field
+    } catch (error) {
+      console.error('Error updating tenant:', error);
+      throw error;
+    }
   },
 
-  deleteTenant: async (id) => {
-    return MockBackend.deleteTenant(id);
+  deleteTenant: async (tenantId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/whistleblower/deleteTenant/${tenantId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete tenant');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error deleting tenant:', error);
+      throw error;
+    }
   }
 };
