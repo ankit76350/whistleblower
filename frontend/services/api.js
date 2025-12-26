@@ -83,8 +83,8 @@ export const api = {
 
   getReport: async (reportId) => {
     try {
-      // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898';
-      const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';
+      const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898';
+      // const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';
       const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/report/${reportId}/conversation`);
       if (!response.ok) {
         throw new Error('Failed to fetch report');
@@ -139,8 +139,8 @@ export const api = {
   // Admin specific
   getReports: async () => {
     try {
-      // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898';
-      const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';
+      const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898';
+      // const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';
       const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/reports`);
       if (!response.ok) {
         throw new Error('Failed to fetch reports');
