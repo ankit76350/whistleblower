@@ -3,9 +3,16 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, Inbox, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
-import { ReportStatus } from '../services/mockBackend';
 import StatusBadge from '../components/StatusBadge';
 import TimerIndicator from '../components/TimerIndicator';
+
+// Status values from backend (uppercase)
+const ReportStatus = {
+  New: 'NEW',
+  Received: 'RECEIVED',
+  InProgress: 'IN_PROGRESS',
+  Closed: 'CLOSED',
+};
 
 const AdminInboxPage = () => {
   const [filter, setFilter] = useState('All');
@@ -20,9 +27,9 @@ const AdminInboxPage = () => {
     ?.filter((r) => filter === 'All' || r.status === filter)
     .filter((r) =>
       r.subject.toLowerCase().includes(search.toLowerCase()) ||
-      r.report_id.toLowerCase().includes(search.toLowerCase())
+      r.reportId.toLowerCase().includes(search.toLowerCase())
     )
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .sort((a, b) => b.createdAt - a.createdAt);
 
   if (isLoading) return <div className="p-10 text-center text-slate-500">Loading inbox...</div>;
 
@@ -37,7 +44,7 @@ const AdminInboxPage = () => {
           </div>
           <div className="bg-red-50 px-3 py-1 rounded-md border border-red-100 text-xs font-semibold text-red-600">
             Overdue: {reports?.filter(r => {
-              const diff = Date.now() - new Date(r.created_at).getTime();
+              const diff = Date.now() - (r.createdAt * 1000);
               return r.status === ReportStatus.New && diff > 7 * 24 * 60 * 60 * 1000;
             }).length || 0}
           </div>
@@ -83,8 +90,8 @@ const AdminInboxPage = () => {
           ) : (
             filteredReports?.map((report) => (
               <Link
-                key={report.report_id}
-                to={`/admin/case/${report.report_id}`}
+                key={report.reportId}
+                to={`/admin/case/${report.reportId}`}
                 className="block p-4 hover:bg-slate-50 transition-colors group"
               >
                 <div className="flex items-center justify-between">
@@ -92,13 +99,13 @@ const AdminInboxPage = () => {
                     <div className={`w-2 h-2 mt-2 rounded-full ${report.status === ReportStatus.New ? 'bg-blue-500' : 'bg-slate-300'}`} />
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-xs text-slate-400">#{report.report_id}</span>
+                        <span className="font-mono text-xs text-slate-400">#{report.reportId.substring(0, 8)}</span>
                         <StatusBadge status={report.status} />
-                        <TimerIndicator createdAt={report.created_at} status={report.status} />
+                        <TimerIndicator createdAt={report.createdAt} status={report.status} />
                       </div>
                       <h3 className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{report.subject}</h3>
                       <p className="text-xs text-slate-500 mt-1 truncate max-w-md">
-                        {report.messages[report.messages.length - 1]?.text.substring(0, 60)}...
+                        {report.message?.substring(0, 60)}...
                       </p>
                     </div>
                   </div>

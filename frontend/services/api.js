@@ -55,9 +55,19 @@ export const api = {
   },
 
   getReport: async (reportId) => {
-    const report = await MockBackend.getReportThread(reportId);
-    if (!report) throw new Error('Report not found');
-    return report;
+    try {
+      const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898';
+      const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/report/${reportId}/conversation`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch report');
+      }
+      const data = await response.json();
+      // Returns: { report: {...}, messages: [...] }
+      return data;
+    } catch (error) {
+      console.error('Error fetching report:', error);
+      throw error;
+    }
   },
 
   replyToReport: async (reportId, text, from, files) => {
@@ -74,7 +84,17 @@ export const api = {
 
   // Admin specific
   getReports: async () => {
-    return MockBackend.getAdminReports();
+    try {
+      const response = await fetch('http://localhost:8080/whistleblower/tenant/6ce19dbb-84d7-490a-95a1-d935545d4898/reports');
+      if (!response.ok) {
+        throw new Error('Failed to fetch reports');
+      }
+      const data = await response.json();
+      return data; // Backend returns array directly
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      throw error;
+    }
   },
 
   updateReportStatus: async (reportId, status) => {

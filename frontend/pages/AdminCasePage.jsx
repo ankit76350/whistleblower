@@ -9,6 +9,23 @@ import StatusBadge from '../components/StatusBadge';
 import AttachmentInput from '../components/AttachmentInput';
 import Modal from '../components/Modal';
 
+// Backend status values (uppercase)
+const BackendStatus = {
+  New: 'NEW',
+  Received: 'RECEIVED',
+  InProgress: 'IN_PROGRESS',
+  Closed: 'CLOSED',
+  Canceled: 'CANCELED',
+};
+
+
+
+
+// Convert Unix timestamp (seconds) to date string
+const formatDate = (timestamp) => {
+  return new Date(timestamp * 1000).toLocaleString();
+};
+
 const AdminCasePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,7 +38,7 @@ const AdminCasePage = () => {
   const [pendingStatus, setPendingStatus] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
 
-  const { data: report, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['report-admin', id],
     queryFn: () => api.getReport(id),
   });
@@ -47,13 +64,16 @@ const AdminCasePage = () => {
     }
   });
 
-  if (isLoading || !report) return <div className="p-10 text-center">Loading case...</div>;
+  if (isLoading || !data) return <div className="p-10 text-center">Loading case...</div>;
+
+  // Extract report and messages from the API response
+  const { report, messages } = data;
 
   const handleStatusSelect = (newStatus) => {
     if (newStatus === report.status) return;
 
     // Show warning for final statuses
-    if (newStatus === ReportStatus.Closed || newStatus === ReportStatus.Canceled) {
+    if (newStatus === BackendStatus.Closed || newStatus === BackendStatus.Canceled) {
       setPendingStatus(newStatus);
       setShowStatusModal(true);
     } else {
@@ -82,9 +102,9 @@ const AdminCasePage = () => {
         <div>
           <h1 className="text-xl font-bold text-slate-900 mb-1">{report.subject}</h1>
           <div className="flex items-center gap-2 text-sm text-slate-500">
-            <span>ID: {report.report_id}</span>
+            <span>ID: {report.reportId}</span>
             <span>•</span>
-            <span>{new Date(report.created_at).toLocaleString()}</span>
+            <span>{formatDate(report.createdAt)}</span>
           </div>
         </div>
 
@@ -95,8 +115,8 @@ const AdminCasePage = () => {
             onChange={(e) => handleStatusSelect(e.target.value)}
             className="border border-slate-300 rounded-lg py-2 pl-3 pr-8 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white font-medium"
           >
-            {Object.values(ReportStatus).map(s => (
-              <option key={s} value={s}>{s.replace(/([A-Z])/g, ' $1').trim()}</option>
+            {Object.values(BackendStatus).map(s => (
+              <option key={s} value={s}>{formatStatus(s)}</option>
             ))}
           </select>
         </div>
@@ -104,30 +124,58 @@ const AdminCasePage = () => {
 
       {/* Thread */}
       <div className="bg-slate-50/50 rounded-xl border border-slate-200 p-6 mb-6 space-y-6">
-        {report.messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.from === 'admin' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-lg p-4 shadow-sm ${msg.from === 'admin' ? 'bg-white border border-slate-200' : 'bg-blue-50 border border-blue-100'}`}>
-              <div className="flex items-center justify-between gap-4 mb-2">
-                <span className={`text-xs font-bold uppercase ${msg.from === 'admin' ? 'text-slate-700' : 'text-blue-700'}`}>
-                  {msg.from === 'admin' ? 'Compliance Team (You)' : 'Reporter'}
-                </span>
-                <span className="text-xs text-slate-400">{new Date(msg.created_at).toLocaleString()}</span>
-              </div>
-              <p className="text-slate-800 whitespace-pre-wrap">{msg.text}</p>
-              {/* Admin Attachment View */}
-              {msg.attachments?.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {msg.attachments.map((att, i) => (
-                    <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
-                      <div className="font-medium truncate flex-1">{att.name}</div>
-                      <div className="text-slate-400 ml-2">{(att.size / 1024).toFixed(0)}KB</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+        {/* Initial Reporter Message (from report.message) */}
+        <div className="flex justify-start">
+          <div className="max-w-[85%] rounded-lg p-4 shadow-sm bg-blue-50 border border-blue-100">
+            <div className="flex items-center justify-between gap-4 mb-2">
+              <span className="text-xs font-bold uppercase text-blue-700">
+                Reporter
+              </span>
+              <span className="text-xs text-slate-400">{formatDate(report.createdAt)}</span>
             </div>
+            <p className="text-slate-800 whitespace-pre-wrap">{report.message}</p>
+            {/* Attachments View */}
+            {report.attachments?.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {report.attachments.map((att, i) => (
+                  <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
+                    <div className="font-medium truncate flex-1">{att.name}</div>
+                    <div className="text-slate-400 ml-2">{(att.size / 1024).toFixed(0)}KB</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
+        </div>
+
+        {/* Follow-up Messages */}
+        {messages?.map((msg) => {
+          const isAdmin = msg.sender === 'COMPLIANCE_TEAM';
+          return (
+            <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] rounded-lg p-4 shadow-sm ${isAdmin ? 'bg-white border border-slate-200' : 'bg-blue-50 border border-blue-100'}`}>
+                <div className="flex items-center justify-between gap-4 mb-2">
+                  <span className={`text-xs font-bold uppercase ${isAdmin ? 'text-slate-700' : 'text-blue-700'}`}>
+                    {isAdmin ? 'Compliance Team (You)' : 'Reporter'}
+                  </span>
+                  <span className="text-xs text-slate-400">{formatDate(msg.createdAt)}</span>
+                </div>
+                <p className="text-slate-800 whitespace-pre-wrap">{msg.message}</p>
+                {/* Attachment View */}
+                {msg.attachments?.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {msg.attachments.map((att, i) => (
+                      <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
+                        <div className="font-medium truncate flex-1">{att.name}</div>
+                        <div className="text-slate-400 ml-2">{(att.size / 1024).toFixed(0)}KB</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Reply */}
@@ -163,20 +211,20 @@ const AdminCasePage = () => {
         onClose={() => { setShowStatusModal(false); setPendingStatus(null); }}
         onConfirm={confirmStatusChange}
         isLoading={statusMutation.isPending}
-        title={`Set status to ${pendingStatus}?`}
+        title={`Set status to ${formatStatus(pendingStatus)}?`}
         type="warning"
-        confirmLabel={`Confirm ${pendingStatus}`}
+        confirmLabel={`Confirm ${formatStatus(pendingStatus)}`}
         message={
           <div className="space-y-3">
             <div className="flex gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 text-sm">
               <AlertTriangle className="w-6 h-6 flex-shrink-0" />
               <p>
-                Setting a case to <strong>{pendingStatus}</strong> typically signals the end of the investigation.
+                Setting a case to <strong>{formatStatus(pendingStatus)}</strong> typically signals the end of the investigation.
                 The whistleblower will see this update immediately using their Secret Key.
               </p>
             </div>
             <p className="text-slate-600 text-sm">
-              Are you sure you want to mark this case as <strong>{pendingStatus}</strong>?
+              Are you sure you want to mark this case as <strong>{formatStatus(pendingStatus)}</strong>?
             </p>
           </div>
         }
