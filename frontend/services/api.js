@@ -11,17 +11,43 @@ const fileToBase64 = (file) => {
 };
 
 export const api = {
-  createReport: async (subject, message, files) => {
-    // Process attachments for mock backend (convert to base64)
-    const attachmentData = await Promise.all(
-      files.map(async (f) => ({
-        name: f.name,
-        size: f.size,
-        type: f.type,
-        dataUrl: await fileToBase64(f),
-      }))
-    );
-    return MockBackend.createReport(subject, message, attachmentData);
+  createReport: async (tenantId, subject, message, files) => {
+    try {
+      // Process attachments if any
+      const attachmentData = files && files.length > 0
+        ? await Promise.all(
+          files.map(async (f) => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+            dataUrl: await fileToBase64(f),
+          }))
+        )
+        : null;
+
+      const response = await fetch('http://localhost:8080/whistleblower/anonymous/submitNewReport', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenantId,
+          subject,
+          message,
+          attachments: attachmentData,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit report');
+      }
+
+      const data = await response.json();
+      return data; // Returns: { id, reportId, secretKey, tenantId, subject, message, status, etc. }
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      throw error;
+    }
   },
 
   lookupReport: async (secretKey) => {

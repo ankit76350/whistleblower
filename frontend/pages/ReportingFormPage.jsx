@@ -16,11 +16,14 @@ const ReportingFormPage = () => {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      return api.createReport(subject, message, files);
+      // Get tenant ID from environment variable or use a default for testing
+      const tenantId = import.meta.env.VITE_TENANT_ID || '6ce19dbb-84d7-490a-95a1-d935545d4898';
+      return api.createReport(tenantId, subject, message, files);
     },
     onSuccess: (data) => {
       setShowConfirmModal(false);
-      navigate(`/thanks?secret_key=${data.secret_key}`);
+      // API returns secretKey (camelCase), not secret_key
+      navigate(`/thanks?secret_key=${data.secretKey}`);
     },
     onError: () => {
       setShowConfirmModal(false);
