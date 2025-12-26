@@ -51,7 +51,34 @@ export const api = {
   },
 
   lookupReport: async (secretKey) => {
-    return MockBackend.lookupReport(secretKey);
+    try {
+      const response = await fetch(`http://localhost:8080/whistleblower/report/${secretKey}/conversation`);
+      if (!response.ok) {
+        throw new Error('Report not found');
+      }
+      const data = await response.json();
+      // Returns: { report: {...}, messages: [...] }
+      return data.report; // Return just the report for lookup purposes
+    } catch (error) {
+      console.error('Error looking up report:', error);
+      throw error;
+    }
+  },
+
+  // Get report by secretKey (for reporters/users)
+  getReportBySecretKey: async (secretKey) => {
+    try {
+      const response = await fetch(`http://localhost:8080/whistleblower/report/${secretKey}/conversation`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch report');
+      }
+      const data = await response.json();
+      // Returns: { report: {...}, messages: [...] }
+      return data;
+    } catch (error) {
+      console.error('Error fetching report by secret key:', error);
+      throw error;
+    }
   },
 
   getReport: async (reportId) => {

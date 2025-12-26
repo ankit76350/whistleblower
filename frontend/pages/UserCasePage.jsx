@@ -7,7 +7,11 @@ import { api } from '../services/api';
 import { useStore } from '../store';
 import AttachmentInput from '../components/AttachmentInput';
 import StatusBadge from '../components/StatusBadge';
-// Removed import from types
+
+// Convert Unix timestamp (seconds) to date string
+const formatDate = (timestamp) => {
+  return new Date(timestamp * 1000).toLocaleString();
+};
 
 const UserCasePage = () => {
   const { id } = useParams();
@@ -21,22 +25,22 @@ const UserCasePage = () => {
   const [replyText, setReplyText] = useState('');
   const [files, setFiles] = useState([]);
 
-  // 1. Fetch Report Data
-  const { data: report, isLoading, isError } = useQuery({
-    queryKey: ['report', id],
-    queryFn: () => api.getReport(id),
-    enabled: !!id && !!secretKey,
+  // 1. Fetch Report Data using secretKey
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['report', secretKey],
+    queryFn: () => api.getReportBySecretKey(secretKey),
+    enabled: !!secretKey,
     refetchInterval: 30000, // Poll every 30s
     retry: false,
   });
 
   const replyMutation = useMutation({
-    mutationFn: () => api.replyToReport(id, replyText, 'reporter', files),
+    mutationFn: () => api.replyToReport(data?.report?.reportId, replyText, 'REPORTER', files),
     onSuccess: () => {
       setReplyText('');
       setFiles([]);
       toast.success('Reply sent');
-      queryClient.invalidateQueries({ queryKey: ['report', id] });
+      queryClient.invalidateQueries({ queryKey: ['report', secretKey] });
     },
     onError: () => toast.error('Failed to send reply'),
   });
@@ -46,7 +50,10 @@ const UserCasePage = () => {
   }
 
   if (isLoading) return <div className="text-center py-20">Loading secure thread...</div>;
-  if (isError || !report) return <div className="text-center py-20 text-red-600">Error loading report. Session may have expired.</div>;
+  if (isError || !data) return <div className="text-center py-20 text-red-600">Error loading report. Session may have expired.</div>;
+
+  // Extract report and messages from API response
+  const { report, messages } = data;
 
   const handleReply = (e) => {
     e.preventDefault();
@@ -65,7 +72,7 @@ const UserCasePage = () => {
               <StatusBadge status={report.status} />
             </div>
             <p className="text-sm text-slate-500">
-              Report ID: <span className="font-mono">{report.report_id}</span> • Created: {new Date(report.created_at).toLocaleDateString()}
+              Report ID: <span className="font-mono">{report.reportId.substring(0, 8)}</span> • Created: {formatDate(report.createdAt)}
             </p>
           </div>
         </div>
@@ -73,40 +80,67 @@ const UserCasePage = () => {
 
       {/* Thread */}
       <div className="space-y-6 mb-8">
-        {report.messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.from === 'reporter' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className={`max-w-[80%] rounded-2xl p-5 ${msg.from === 'reporter' ? 'bg-blue-50 border border-blue-100 rounded-tr-none' : 'bg-white border border-slate-200 rounded-tl-none shadow-sm'}`}>
-              <div className="flex items-center gap-2 mb-2">
-                {msg.from === 'reporter' ? (
-                  <User className="w-4 h-4 text-blue-600" />
-                ) : (
-                  <ShieldAlert className="w-4 h-4 text-amber-600" />
-                )}
-                <span className={`text-xs font-bold uppercase ${msg.from === 'reporter' ? 'text-blue-700' : 'text-amber-700'}`}>
-                  {msg.from === 'reporter' ? 'You' : 'Compliance Team'}
-                </span>
-                <span className="text-xs text-slate-400">
-                  {new Date(msg.created_at).toLocaleString()}
-                </span>
-              </div>
-              <p className="text-slate-800 whitespace-pre-wrap">{msg.text}</p>
-
-              {msg.attachments && msg.attachments.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-slate-200/50 space-y-2">
-                  {msg.attachments.map((att, i) => (
-                    <div key={i} className="flex items-center text-sm text-slate-600 bg-white/50 p-2 rounded border border-slate-200/50">
-                      <FileText className="w-4 h-4 mr-2 text-slate-400" />
-                      <span className="truncate">{att.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+        {/* Initial Reporter Message (from report.message) */}
+        <div className="flex justify-end">
+          <div className="max-w-[80%] rounded-2xl p-5 bg-blue-50 border border-blue-100 rounded-tr-none">
+            <div className="flex items-center gap-2 mb-2">
+              <User className="w-4 h-4 text-blue-600" />
+              <span className="text-xs font-bold uppercase text-blue-700">You</span>
+              <span className="text-xs text-slate-400">{formatDate(report.createdAt)}</span>
             </div>
+            <p className="text-slate-800 whitespace-pre-wrap">{report.message}</p>
+
+            {report.attachments && report.attachments.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-slate-200/50 space-y-2">
+                {report.attachments.map((att, i) => (
+                  <div key={i} className="flex items-center text-sm text-slate-600 bg-white/50 p-2 rounded border border-slate-200/50">
+                    <FileText className="w-4 h-4 mr-2 text-slate-400" />
+                    <span className="truncate">{att.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
+        </div>
+
+        {/* Follow-up Messages */}
+        {messages?.map((msg) => {
+          const isReporter = msg.sender === 'REPORTER';
+          return (
+            <div
+              key={msg.id}
+              className={`flex ${isReporter ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`max-w-[80%] rounded-2xl p-5 ${isReporter ? 'bg-blue-50 border border-blue-100 rounded-tr-none' : 'bg-white border border-slate-200 rounded-tl-none shadow-sm'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {isReporter ? (
+                    <User className="w-4 h-4 text-blue-600" />
+                  ) : (
+                    <ShieldAlert className="w-4 h-4 text-amber-600" />
+                  )}
+                  <span className={`text-xs font-bold uppercase ${isReporter ? 'text-blue-700' : 'text-amber-700'}`}>
+                    {isReporter ? 'You' : 'Compliance Team'}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {formatDate(msg.createdAt)}
+                  </span>
+                </div>
+                <p className="text-slate-800 whitespace-pre-wrap">{msg.message}</p>
+
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-slate-200/50 space-y-2">
+                    {msg.attachments.map((att, i) => (
+                      <div key={i} className="flex items-center text-sm text-slate-600 bg-white/50 p-2 rounded border border-slate-200/50">
+                        <FileText className="w-4 h-4 mr-2 text-slate-400" />
+                        <span className="truncate">{att.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Reply Box */}

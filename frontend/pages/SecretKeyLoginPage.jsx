@@ -21,7 +21,7 @@ const SecretKeyLoginPage = () => {
       } else {
         setStoreKey(null);
       }
-      navigate(`/case/${data.report_id}`, { state: { secretKey: variables } });
+      navigate(`/case/${data.reportId}`, { state: { secretKey: variables } });
     },
     onError: () => {
       toast.error('Report not found. Please check your Secret Key.');
