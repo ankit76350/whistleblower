@@ -12,6 +12,7 @@ import org.example.dto.SendMessageRequest;
 import org.example.model.ApiResponse;
 import org.example.model.ConversationMessage;
 import org.example.dto.ReportWithConversationResponse;
+import org.example.dto.AdminReportConversationResponse;
 
 import java.util.List;
 
@@ -121,9 +122,9 @@ public class WhistleblowerController {
 
         }
 
-        // Todo:
+        // Todo: Get conversation for the admin
         @GetMapping("/tenant/{tenantId}/report/{reportId}/conversation")
-        public ResponseEntity<ReportWithConversationResponse> getReportConversation(
+        public ResponseEntity<AdminReportConversationResponse> getReportConversation(
                         @PathVariable String tenantId,
                         @PathVariable String reportId) {
                 return ResponseEntity.ok(
