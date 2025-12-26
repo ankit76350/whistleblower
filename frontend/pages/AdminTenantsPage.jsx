@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Building2, Mail, Calendar, CheckCircle2, XCircle, Loader2, Edit2, Trash2, X, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchTenants } from '../store/tenantsSlice';
+import { Plus, Search, Building2, Mail, Calendar, CheckCircle2, XCircle, Loader2, Edit2, Trash2, X, Save, AlertTriangle } from 'lucide-react';
 import { api } from '../services/api';
-// Removed import from types
 import toast from 'react-hot-toast';
 import Modal from '../components/Modal';
 
@@ -20,16 +21,22 @@ const AdminTenantsPage = () => {
   // New/Edit tenant form state
   const [formData, setFormData] = useState({ email: '', companyName: '' });
 
-  const { data: tenants, isLoading } = useQuery({
-    queryKey: ['tenants'],
-    queryFn: api.getTenants
-  });
+  const dispatch = useDispatch();
+  const { items: tenants, loading: isLoading, error } = useSelector((state) => state.tenants);
+
+  useEffect(() => {
+    dispatch(fetchTenants());
+  }, [dispatch]);
+
+  const onMutationSuccess = () => {
+    dispatch(fetchTenants());
+  };
 
   const createTenantMutation = useMutation({
     mutationFn: () => api.createTenant(formData.email, formData.companyName),
     onSuccess: () => {
       toast.success('Tenant created successfully');
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      onMutationSuccess();
       setIsAdding(false);
       setModalType(null);
       resetForm();
@@ -41,7 +48,7 @@ const AdminTenantsPage = () => {
     mutationFn: ({ id, data }) => api.updateTenant(id, data),
     onSuccess: () => {
       toast.success('Tenant updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      onMutationSuccess();
       setEditingTenantId(null);
       setModalType(null);
       setPendingTenant(null);
@@ -54,7 +61,7 @@ const AdminTenantsPage = () => {
     mutationFn: (id) => api.deleteTenant(id),
     onSuccess: () => {
       toast.success('Tenant deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
+      onMutationSuccess();
       setModalType(null);
       setPendingTenant(null);
     },
@@ -64,7 +71,7 @@ const AdminTenantsPage = () => {
   const resetForm = () => setFormData({ email: '', companyName: '' });
 
   const startEdit = (tenant) => {
-    setEditingTenantId(tenant._id);
+    setEditingTenantId(tenant.id);
     setFormData({ email: tenant.email, companyName: tenant.companyName });
     setIsAdding(false);
   };
@@ -200,6 +207,13 @@ const AdminTenantsPage = () => {
                     Fetching tenants...
                   </td>
                 </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-red-500 font-medium">
+                    <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                    Error: {error}
+                  </td>
+                </tr>
               ) : filteredTenants?.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-medium">
@@ -208,7 +222,7 @@ const AdminTenantsPage = () => {
                 </tr>
               ) : (
                 filteredTenants?.map((tenant) => (
-                  <tr key={tenant._id} className={`transition-colors group ${editingTenantId === tenant._id ? 'bg-blue-50/50' : 'hover:bg-slate-50/80'}`}>
+                  <tr key={tenant.id} className={`transition-colors group ${editingTenantId === tenant.id ? 'bg-blue-50/50' : 'hover:bg-slate-50/80'}`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center mr-3 group-hover:bg-blue-50 transition-colors">
@@ -303,10 +317,15 @@ const AdminTenantsPage = () => {
       <Modal
         isOpen={modalType === 'update'}
         onClose={() => setModalType(null)}
-        onConfirm={() => updateTenantMutation.mutate({
-          id: editingTenantId,
-          data: { email: formData.email, companyName: formData.companyName }
-        })}
+        onConfirm={() => {
+          const tenant = tenants.find(t => t.id === editingTenantId);
+          if (tenant) {
+            updateTenantMutation.mutate({
+              id: tenant.tenantId,
+              data: { email: formData.email, companyName: formData.companyName }
+            });
+          }
+        }}
         isLoading={updateTenantMutation.isPending}
         title="Update Tenant Info?"
         type="warning"
@@ -333,7 +352,7 @@ const AdminTenantsPage = () => {
         isOpen={modalType === 'status'}
         onClose={() => { setModalType(null); setPendingTenant(null); }}
         onConfirm={() => pendingTenant && updateTenantMutation.mutate({
-          id: pendingTenant._id,
+          id: pendingTenant.tenantId,
           data: { active: pendingStatus }
         })}
         isLoading={updateTenantMutation.isPending}
@@ -356,7 +375,7 @@ const AdminTenantsPage = () => {
       <Modal
         isOpen={modalType === 'delete'}
         onClose={() => { setModalType(null); setPendingTenant(null); }}
-        onConfirm={() => pendingTenant && deleteTenantMutation.mutate(pendingTenant._id)}
+        onConfirm={() => pendingTenant && deleteTenantMutation.mutate(pendingTenant.tenantId)}
         isLoading={deleteTenantMutation.isPending}
         title="Delete Tenant Permanently?"
         type="danger"
