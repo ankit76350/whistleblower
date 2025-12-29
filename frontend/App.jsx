@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
@@ -17,7 +17,7 @@ const queryClient = new QueryClient();
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <HashRouter>
+      <BrowserRouter>
         <Layout>
           <Routes>
             {/* Public Reporter Routes */}
@@ -34,7 +34,7 @@ const App = () => {
             <Route path="/admin/tenants" element={<AdminTenantsPage />} />
           </Routes>
         </Layout>
-      </HashRouter>
+      </BrowserRouter>
       <Toaster position="top-right" />
     </QueryClientProvider>
   );
