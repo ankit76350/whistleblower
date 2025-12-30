@@ -1,0 +1,38 @@
+# ===========================================
+# Application Configuration Template
+# ===========================================
+# Copy this file to application.properties and fill in your values
+# DO NOT commit application.properties with real credentials!
+
+# Logging
+logging.level.root=WARN
+app.show-stacktrace=true
+
+# Spring Profile
+spring.profiles.active=local
+
+# ===========================================
+# AWS Configuration
+# ===========================================
+cloud.aws.credentials.access-key=${AWS_ACCESS_KEY_ID}
+cloud.aws.credentials.secret-key=${AWS_SECRET_ACCESS_KEY}
+cloud.aws.region.static=${AWS_REGION:eu-central-1}
+aws.region=${AWS_REGION:eu-central-1}
+
+# ===========================================
+# MongoDB Configuration
+# ===========================================
+spring.data.mongodb.uri=${MONGODB_URI}
+
+# ===========================================
+# AWS Cognito Configuration
+# ===========================================
+aws.cognito.userPoolId=${COGNITO_USER_POOL_ID}
+
+# Cognito JWT validation
+spring.security.oauth2.resourceserver.jwt.issuer-uri=https://cognito-idp.${AWS_REGION:eu-central-1}.amazonaws.com/${COGNITO_USER_POOL_ID}
+
+# ===========================================
+# CORS Configuration
+# ===========================================
+app.cors.allowed-origins=${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}

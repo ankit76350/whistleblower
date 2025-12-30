@@ -2,6 +2,12 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# Backend properties with secrets (keep .example files for reference)
+backend/src/main/resources/application.properties
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-dev.properties
+
 .kotlin
 
 ### IntelliJ IDEA ###
