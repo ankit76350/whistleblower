@@ -10,6 +10,34 @@ const fileToBase64 = (file) => {
   });
 };
 
+// Token storage for API calls
+let currentAccessToken = null;
+
+/**
+ * Set the access token for API calls
+ * Call this from components after auth state changes
+ */
+export const setAuthToken = (token) => {
+  currentAccessToken = token;
+};
+
+/**
+ * Get the current access token
+ */
+export const getAuthToken = () => currentAccessToken;
+
+// Helper to get auth headers for protected API calls
+const getAuthHeaders = () => {
+  if (currentAccessToken) {
+    return {
+      'Authorization': `Bearer ${currentAccessToken}`,
+    };
+  }
+  return {};
+};
+
+
+
 export const api = {
   createReport: async (tenantId, subject, message, files) => {
     try {
@@ -83,9 +111,13 @@ export const api = {
 
   getReport: async (reportId) => {
     try {
-      const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898';
-      // const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';
-      const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/report/${reportId}/conversation`);
+         // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898'; //Updated Company Name
+      const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';//Verification Corp
+      const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/report/${reportId}/conversation`, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch report');
       }
@@ -116,6 +148,7 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
           sender,
@@ -139,9 +172,13 @@ export const api = {
   // Admin specific
   getReports: async () => {
     try {
-      const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898';
-      // const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';
-      const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/reports`);
+      // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898'; //Updated Company Name
+      const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';//Verification Corp
+      const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/reports`, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch reports');
       }
@@ -160,7 +197,11 @@ export const api = {
   // Tenant Management
   getTenants: async () => {
     try {
-      const response = await fetch('http://localhost:8080/whistleblower/admin/getAllTenants');
+      const response = await fetch('http://localhost:8080/whistleblower/admin/getAllTenants', {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -178,6 +219,7 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({ email, companyName }),
       });
@@ -198,6 +240,7 @@ export const api = {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(data),
       });
@@ -216,6 +259,9 @@ export const api = {
     try {
       const response = await fetch(`http://localhost:8080/whistleblower/deleteTenant/${tenantId}`, {
         method: 'DELETE',
+        headers: {
+          ...getAuthHeaders(),
+        },
       });
       if (!response.ok) {
         throw new Error('Failed to delete tenant');
