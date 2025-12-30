@@ -1,17 +1,16 @@
 // Cognito configuration for react-oidc-context
-// Update these values for production deployment
+// All values are loaded from environment variables for easy production deployment
+// See .env.example for required variables
 
 const cognitoAuthConfig = {
     // OIDC authority (Cognito User Pool URL)
-    authority: 'https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_hCjRk7DV8',
+    authority: import.meta.env.VITE_COGNITO_AUTHORITY,
 
     // App Client ID (from Cognito console)
-    client_id: '3hkapm135pqi7k15ealrug5ar1',
+    client_id: import.meta.env.VITE_COGNITO_CLIENT_ID,
 
     // Redirect URI after login - must match Cognito app client settings
-    redirect_uri: import.meta.env.PROD
-        ? 'https://your-cloudfront-domain.com/admin/inbox'  // TODO: Update for production
-        : 'http://localhost:3000/admin/inbox',
+    redirect_uri: import.meta.env.VITE_REDIRECT_URI,
 
     // OAuth2 response type
     response_type: 'code',
@@ -20,12 +19,10 @@ const cognitoAuthConfig = {
     scope: 'email openid phone',
 
     // Cognito domain for logout
-    cognitoDomain: 'https://eu-central-1hcjrk7dv8.auth.eu-central-1.amazoncognito.com',
+    cognitoDomain: import.meta.env.VITE_COGNITO_DOMAIN,
 
     // Logout redirect URI
-    logoutUri: import.meta.env.PROD
-        ? 'https://your-cloudfront-domain.com/'  // TODO: Update for production
-        : 'http://localhost:3000/',
+    logoutUri: import.meta.env.VITE_LOGOUT_URI,
 };
 
 export default cognitoAuthConfig;

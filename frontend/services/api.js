@@ -1,5 +1,8 @@
 import { MockBackend } from './mockBackend';
 
+// API Base URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
 // Helper to convert File object to Base64 for mock storage
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -53,7 +56,7 @@ export const api = {
         )
         : null;
 
-      const response = await fetch('http://localhost:8080/whistleblower/anonymous/submitNewReport', {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/anonymous/submitNewReport`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +83,7 @@ export const api = {
 
   lookupReport: async (secretKey) => {
     try {
-      const response = await fetch(`http://localhost:8080/whistleblower/report/${secretKey}/conversation`);
+      const response = await fetch(`${API_BASE_URL}/whistleblower/report/${secretKey}/conversation`);
       if (!response.ok) {
         throw new Error('Report not found');
       }
@@ -96,7 +99,7 @@ export const api = {
   // Get report by secretKey (for reporters/users)
   getReportBySecretKey: async (secretKey) => {
     try {
-      const response = await fetch(`http://localhost:8080/whistleblower/report/${secretKey}/conversation`);
+      const response = await fetch(`${API_BASE_URL}/whistleblower/report/${secretKey}/conversation`);
       if (!response.ok) {
         throw new Error('Failed to fetch report');
       }
@@ -111,9 +114,9 @@ export const api = {
 
   getReport: async (reportId) => {
     try {
-         // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898'; //Updated Company Name
+      // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898'; //Updated Company Name
       const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';//Verification Corp
-      const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/report/${reportId}/conversation`, {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/tenant/${tenantId}/report/${reportId}/conversation`, {
         headers: {
           ...getAuthHeaders(),
         },
@@ -144,7 +147,7 @@ export const api = {
         )
         : null;
 
-      const response = await fetch(`http://localhost:8080/whistleblower/reports/${reportId}/messages`, {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/reports/${reportId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,7 +177,7 @@ export const api = {
     try {
       // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898'; //Updated Company Name
       const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';//Verification Corp
-      const response = await fetch(`http://localhost:8080/whistleblower/tenant/${tenantId}/reports`, {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/tenant/${tenantId}/reports`, {
         headers: {
           ...getAuthHeaders(),
         },
@@ -197,7 +200,7 @@ export const api = {
   // Tenant Management
   getTenants: async () => {
     try {
-      const response = await fetch('http://localhost:8080/whistleblower/admin/getAllTenants', {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/admin/getAllTenants`, {
         headers: {
           ...getAuthHeaders(),
         },
@@ -215,7 +218,7 @@ export const api = {
 
   createTenant: async (email, companyName) => {
     try {
-      const response = await fetch('http://localhost:8080/whistleblower/admin/addNewTenant', {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/admin/addNewTenant`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -236,7 +239,7 @@ export const api = {
 
   updateTenant: async (tenantId, data) => {
     try {
-      const response = await fetch(`http://localhost:8080/whistleblower/admin/updateTenant/${tenantId}`, {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/admin/updateTenant/${tenantId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -257,7 +260,7 @@ export const api = {
 
   deleteTenant: async (tenantId) => {
     try {
-      const response = await fetch(`http://localhost:8080/whistleblower/deleteTenant/${tenantId}`, {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/deleteTenant/${tenantId}`, {
         method: 'DELETE',
         headers: {
           ...getAuthHeaders(),
