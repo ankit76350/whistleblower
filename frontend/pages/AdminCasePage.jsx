@@ -71,7 +71,7 @@ const AdminCasePage = () => {
       setReplyText('');
       setFiles([]);
       toast.success('Reply sent');
-      queryClient.invalidateQueries({ queryKey: ['report-admin', id] });
+      queryClient.invalidateQueries({ queryKey: ['report-admin', tenantId, id] });
     },
   });
 
@@ -79,8 +79,8 @@ const AdminCasePage = () => {
     mutationFn: (status) => api.updateReportStatus(id, status),
     onSuccess: () => {
       toast.success('Status updated');
-      queryClient.invalidateQueries({ queryKey: ['report-admin', id] });
-      queryClient.invalidateQueries({ queryKey: ['admin-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['report-admin', tenantId, id] });
+      queryClient.invalidateQueries({ queryKey: ['admin-reports', tenantId] });
       setShowStatusModal(false);
       setPendingStatus(null);
     }
