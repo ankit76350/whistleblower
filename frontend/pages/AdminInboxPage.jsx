@@ -21,15 +21,33 @@ const AdminInboxPage = () => {
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
 
+  // Get user's email from Cognito JWT
+  const userEmail = auth.user?.profile?.email;
+
   // Logout handler - properly clears all storage and redirects to Cognito
   const handleLogout = () => {
     completeLogout(auth);
   };
 
-  const { data: reports, isLoading } = useQuery({
-    queryKey: ['admin-reports'],
-    queryFn: api.getReports,
+  // First, fetch all tenants to find the one matching the user's email
+  const { data: tenants, isLoading: isLoadingTenants } = useQuery({
+    queryKey: ['tenants'],
+    queryFn: api.getTenants,
+    enabled: !!userEmail,
   });
+
+  // Find tenant that matches the logged-in user's email
+  const userTenant = tenants?.find(t => t.email === userEmail);
+  const tenantId = userTenant?.tenantId;
+
+  // Then fetch reports for this tenant
+  const { data: reports, isLoading: isLoadingReports } = useQuery({
+    queryKey: ['admin-reports', tenantId],
+    queryFn: () => api.getReports(tenantId),
+    enabled: !!tenantId, // Only fetch when tenantId is available
+  });
+
+  const isLoading = isLoadingTenants || (tenantId && isLoadingReports);
 
   const filteredReports = reports
     ?.filter((r) => filter === 'All' || r.status === filter)

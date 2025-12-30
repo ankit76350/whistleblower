@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from 'react-oidc-context';
 import { Send, ArrowLeft, Shield, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
-
-import StatusBadge from '../components/StatusBadge';
 import AttachmentInput from '../components/AttachmentInput';
 import Modal from '../components/Modal';
 
@@ -36,6 +35,10 @@ const AdminCasePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const auth = useAuth();
+
+  // Get user's email from Cognito JWT
+  const userEmail = auth.user?.profile?.email;
 
   const [replyText, setReplyText] = useState('');
   const [files, setFiles] = useState([]);
@@ -44,9 +47,22 @@ const AdminCasePage = () => {
   const [pendingStatus, setPendingStatus] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['report-admin', id],
-    queryFn: () => api.getReport(id),
+  // First, fetch all tenants to find the one matching the user's email
+  const { data: tenants, isLoading: isLoadingTenants } = useQuery({
+    queryKey: ['tenants'],
+    queryFn: api.getTenants,
+    enabled: !!userEmail,
+  });
+
+  // Find tenant that matches the logged-in user's email
+  const userTenant = tenants?.find(t => t.email === userEmail);
+  const tenantId = userTenant?.tenantId;
+
+  // Then fetch the report for this tenant
+  const { data, isLoading: isLoadingReport } = useQuery({
+    queryKey: ['report-admin', tenantId, id],
+    queryFn: () => api.getReport(tenantId, id),
+    enabled: !!tenantId, // Only fetch when tenantId is available
   });
 
   const replyMutation = useMutation({
@@ -69,6 +85,8 @@ const AdminCasePage = () => {
       setPendingStatus(null);
     }
   });
+
+  const isLoading = isLoadingTenants || (tenantId && isLoadingReport);
 
   if (isLoading || !data) return <div className="p-10 text-center">Loading case...</div>;
 
