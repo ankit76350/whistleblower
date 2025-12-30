@@ -4,35 +4,37 @@
 # Copy this file to application.properties and fill in your values
 # DO NOT commit application.properties with real credentials!
 
-# Logging
+# Reduce logging level to make sure the application works with SAM local
+# https://github.com/aws/serverless-java-container/issues/134
 logging.level.root=WARN
+spring.profiles.active=local
 app.show-stacktrace=true
 
-# Spring Profile
-spring.profiles.active=local
-
 # ===========================================
-# AWS Configuration
+# AWS Credentials
 # ===========================================
-cloud.aws.credentials.access-key=${AWS_ACCESS_KEY_ID}
-cloud.aws.credentials.secret-key=${AWS_SECRET_ACCESS_KEY}
-cloud.aws.region.static=${AWS_REGION:eu-central-1}
-aws.region=${AWS_REGION:eu-central-1}
+# Get these from AWS IAM console
+cloud.aws.credentials.access-key=<your-aws-access-key-id>
+cloud.aws.credentials.secret-key=<your-aws-secret-access-key>
+cloud.aws.region.static=eu-central-1
+aws.region=eu-central-1
 
 # ===========================================
 # MongoDB Configuration
 # ===========================================
-spring.data.mongodb.uri=${MONGODB_URI}
+# Get this from MongoDB Atlas connection string
+spring.data.mongodb.uri=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?appName=<app-name>
 
 # ===========================================
 # AWS Cognito Configuration
 # ===========================================
-aws.cognito.userPoolId=${COGNITO_USER_POOL_ID}
+# Get User Pool ID from AWS Cognito console
+aws.cognito.userPoolId=<region>_<user-pool-id>
 
 # Cognito JWT validation
-spring.security.oauth2.resourceserver.jwt.issuer-uri=https://cognito-idp.${AWS_REGION:eu-central-1}.amazonaws.com/${COGNITO_USER_POOL_ID}
+spring.security.oauth2.resourceserver.jwt.issuer-uri=https://cognito-idp.<region>.amazonaws.com/<region>_<user-pool-id>
 
 # ===========================================
 # CORS Configuration
 # ===========================================
-app.cors.allowed-origins=${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+app.cors.allowed-origins=http://localhost:3000,http://localhost:5173
