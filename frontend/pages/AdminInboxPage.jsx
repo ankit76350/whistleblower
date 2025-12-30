@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, Inbox, ChevronRight } from 'lucide-react';
+import { useAuth } from 'react-oidc-context';
+import { Search, Filter, Inbox, ChevronRight, LogOut } from 'lucide-react';
 import { api } from '../services/api';
+import { completeLogout } from '../services/authService';
 import StatusBadge from '../components/StatusBadge';
 import TimerIndicator from '../components/TimerIndicator';
 
@@ -15,8 +17,14 @@ const ReportStatus = {
 };
 
 const AdminInboxPage = () => {
+  const auth = useAuth();
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
+
+  // Logout handler - properly clears all storage and redirects to Cognito
+  const handleLogout = () => {
+    completeLogout(auth);
+  };
 
   const { data: reports, isLoading } = useQuery({
     queryKey: ['admin-reports'],
@@ -48,6 +56,13 @@ const AdminInboxPage = () => {
               return r.status === ReportStatus.New && diff > 7 * 24 * 60 * 60 * 1000;
             }).length || 0}
           </div>
+          <button
+            onClick={handleLogout}
+            className="bg-red-50 px-3 py-1 rounded-md border border-red-100 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1"
+          >
+            <LogOut className="w-3 h-3" />
+            Logout
+          </button>
         </div>
       </div>
 
