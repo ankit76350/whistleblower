@@ -218,6 +218,7 @@ export const api = {
 
   createTenant: async (email, companyName) => {
     try {
+      // Step 1: Create tenant in MongoDB
       const response = await fetch(`${API_BASE_URL}/whistleblower/admin/addNewTenant`, {
         method: 'POST',
         headers: {
@@ -229,8 +230,27 @@ export const api = {
       if (!response.ok) {
         throw new Error('Failed to create tenant');
       }
-      const data = await response.json();
-      return data.data; // Backend returns ApiResponse wrapper with data field
+      const tenantData = await response.json();
+
+      // Step 2: Invite user to Cognito with ADMIN role
+      const cognitoResponse = await fetch(`${API_BASE_URL}/admin/invite/user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({
+          email,
+          role: 'ADMIN'  // Hardcoded role
+        }),
+      });
+
+      if (!cognitoResponse.ok) {
+        console.warn('Tenant created but Cognito invite failed');
+        // Don't throw - tenant was created successfully, just log the warning
+      }
+
+      return tenantData.data; // Backend returns ApiResponse wrapper with data field
     } catch (error) {
       console.error('Error creating tenant:', error);
       throw error;
