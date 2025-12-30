@@ -112,10 +112,8 @@ export const api = {
     }
   },
 
-  getReport: async (reportId) => {
+  getReport: async (tenantId, reportId) => {
     try {
-      // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898'; //Updated Company Name
-      const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';//Verification Corp
       const response = await fetch(`${API_BASE_URL}/whistleblower/tenant/${tenantId}/report/${reportId}/conversation`, {
         headers: {
           ...getAuthHeaders(),
@@ -173,10 +171,8 @@ export const api = {
   },
 
   // Admin specific
-  getReports: async () => {
+  getReports: async (tenantId) => {
     try {
-      // const tenantId = '6ce19dbb-84d7-490a-95a1-d935545d4898'; //Updated Company Name
-      const tenantId = 'e8b943f0-ea55-489e-a481-e7f375f3702f';//Verification Corp
       const response = await fetch(`${API_BASE_URL}/whistleblower/tenant/${tenantId}/reports`, {
         headers: {
           ...getAuthHeaders(),
