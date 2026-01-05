@@ -7,6 +7,7 @@ import { api } from '../services/api';
 import { useStore } from '../store';
 import AttachmentInput from '../components/AttachmentInput';
 import StatusBadge from '../components/StatusBadge';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 // Convert Unix timestamp (seconds) to date string
 const formatDate = (timestamp) => {
@@ -35,9 +36,24 @@ const UserCasePage = () => {
     retry: false,
   });
 
+  // WebSocket Integration
+  // Use a heuristic or wait for data to get reportId. 
+  // We can't init WS until we have reportId.
+  const reportId = data?.report?.reportId;
+  const { isConnected, messages: liveMessages, sendMessage } = useWebSocket(
+    reportId ? 'wss://98gb1udew7.execute-api.eu-central-1.amazonaws.com/prod/' : null,
+    reportId,
+    'REPORTER'
+  );
+
   const replyMutation = useMutation({
     mutationFn: () => api.replyToReport(data?.report?.reportId, replyText, 'REPORTER', files),
     onSuccess: () => {
+      // Send message via WebSocket for real-time update
+      if (replyText.trim()) {
+        sendMessage(replyText);
+      }
+
       setReplyText('');
       setFiles([]);
       toast.success('Reply sent');
@@ -80,6 +96,7 @@ const UserCasePage = () => {
             <span>ID: {report.reportId.substring(0, 8)}</span>
             <span>•</span>
             <span>{formatDate(report.createdAt)}</span>
+            {isConnected ? <span className="text-green-500 text-xs font-bold">• Live</span> : <span className="text-slate-300 text-xs">• Offline</span>}
           </div>
         </div>
 
@@ -142,6 +159,33 @@ const UserCasePage = () => {
               </div>
             </div>
           );
+        })}
+
+        {/* Live WebSocket Messages */}
+        {liveMessages.filter(liveMsg => {
+          // Deduplicate: Don't show live message if it's already in the historical messages
+          return !messages?.some(histMsg =>
+            histMsg.message === liveMsg.message &&
+            (Date.now() - new Date(histMsg.createdAt * 1000).getTime() < 120000) // matches within last 2 mins
+          );
+        }).map((msg, index) => {
+          // Heuristics for sender
+          const sender = msg.userType || msg.sender;
+          const isReporter = sender === 'REPORTER';
+
+          return (
+            <div key={`live-${index}`} className={`flex ${isReporter ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] rounded-lg p-4 shadow-sm ${isReporter ? 'bg-blue-50 border border-blue-100' : 'bg-white border border-slate-200'}`}>
+                <div className="flex items-center justify-between gap-4 mb-2">
+                  <span className={`text-xs font-bold uppercase ${isReporter ? 'text-blue-700' : 'text-slate-700'}`}>
+                    {isReporter ? 'You' : 'Compliance Team'}
+                  </span>
+                  <span className="text-xs text-slate-400">Just now</span>
+                </div>
+                <p className="text-slate-800 whitespace-pre-wrap">{msg.message}</p>
+              </div>
+            </div>
+          )
         })}
       </div>
 

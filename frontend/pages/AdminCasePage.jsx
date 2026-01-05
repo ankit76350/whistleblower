@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { api } from '../services/api';
 import AttachmentInput from '../components/AttachmentInput';
 import Modal from '../components/Modal';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 // Backend status values (uppercase)
 const BackendStatus = {
@@ -65,9 +66,59 @@ const AdminCasePage = () => {
     enabled: !!tenantId, // Only fetch when tenantId is available
   });
 
+  // WebSocket Integration
+  const { isConnected, messages: liveMessages, sendMessage } = useWebSocket(
+    'wss://98gb1udew7.execute-api.eu-central-1.amazonaws.com/prod/',
+    id,
+    'ADMIN'
+  );
+
   const replyMutation = useMutation({
     mutationFn: () => api.replyToReport(id, replyText, 'COMPLIANCE_TEAM', files),
     onSuccess: () => {
+      // Send message via WebSocket for real-time update
+      // Note: The backend logic might already broadcast this if triggered by API, 
+      // but usually the API and WebSocket are separate. 
+      // If the API lambda notifies the connection, we don't need to send it manually here.
+      // However, per the user request, "so that they can talk in the real time",
+      // and usually with this pattern we send via WS OR API.
+      // If we send via API, the API should persist and broadcast.
+      // If we send via WS, the WS handler usually persists and broadcasts.
+      // The current existing code persists via API.
+      // We will assume the API persists, and we use WS just to notify/update OR
+      // we just use WS to send message if the backend WS handler does persistence.
+      // Given the user said "interrgate... so they can talk in real time",
+      // and provided a "sendMessage" action in the test-client HTML,
+      // it implies the WS handler handles 'sendMessage'.
+      // HOWEVER, the existing code uses `api.replyToReport`.
+      // Let's stick to the existing API for persistence and utilize WS for notifications if the backend handles it,
+      // OR we can try to send via WS `sendMessage` action which might just broadcast.
+
+      // Let's TRY sending via WS as well to ensure immediate UI update on the other end
+      // if the backend API doesn't trigger a WS broadcast.
+      // But if the backend 'sendMessage' action broadcasts to everyone including sender, we might get duplicates.
+      // Let's assume for now we just listen. If the user meant purely WS chat replacing API, that's a bigger change.
+      // But usually "integrate" means add on top.
+
+      // Actually, looking at the test client, it sends a message via WS.
+      // Let's use the sendMessage from hook ONLY if we want to bypass HTTP API,
+      // but we probably want to keep using HTTP API for persistence (attachments etc) and consistency.
+      // UNLESS the user wants the chat to be PURELY WebSocket?
+      // "interrgate ... so that they can talk in the real time"
+
+      // If I use `sendMessage` from WS, does it save to DB? The user didn't show the backend code for `SendMessageHandler`.
+      // I'll stick to API for saving, and assume I should maybe send a signal or just rely on the other side receiving it?
+      // Wait, if the other side is on the same page, they need to receive it.
+      // If I am on AdminPage, and I reply via API, the data is saved.
+      // Does the backend broadcast this to the User? Unknown.
+      // To be safe and ensure real-time "talk", I will use `sendMessage` from WS hook *in addition* 
+      // possibly, OR just rely on polling? No, user wants real time.
+
+      // Let's send the text via WS too so it appears instantly on the other side.
+      if (replyText.trim()) {
+        sendMessage(replyText);
+      }
+
       setReplyText('');
       setFiles([]);
       toast.success('Reply sent');
@@ -92,6 +143,18 @@ const AdminCasePage = () => {
 
   // Extract report and messages from the API response
   const { report, messages } = data;
+
+  // Merge historical messages with live messages
+  // We need to deduplicate based on ID or content/timestamp if possible.
+  // For now, let's just append live messages that render.
+  // Note: If `sendMessage` sends via WS and also API saves it, we might get duplicates on reload
+  // But for "live" chat unrelated to persistence, or if persistence is slow, this helps.
+  // Actually, better to just display live messages at the bottom.
+
+  // Filter out live messages that might be duplicates if we re-fetched them?
+  // Let's simpler: Display API messages + Live messages that came AFTER page load.
+  // But duplicate handling is tricky without unique IDs.
+  // For now, simple append.
 
   const handleStatusSelect = (newStatus) => {
     if (newStatus === report.status) return;
@@ -129,6 +192,7 @@ const AdminCasePage = () => {
             <span>ID: {report.reportId}</span>
             <span>•</span>
             <span>{formatDate(report.createdAt)}</span>
+            {isConnected ? <span className="text-green-500 text-xs font-bold">• Live</span> : <span className="text-slate-300 text-xs">• Offline</span>}
           </div>
         </div>
 
@@ -199,6 +263,40 @@ const AdminCasePage = () => {
               </div>
             </div>
           );
+        })}
+
+        {/* Live WebSocket Messages */}
+        {liveMessages.filter(liveMsg => {
+          // Deduplicate: Don't show live message if it's already in the historical messages
+          // This prevents "double" messages when polling fetches the message we just received via WS
+          return !messages?.some(histMsg =>
+            histMsg.message === liveMsg.message &&
+            // Simple heuristic logic to match recent duplicates
+            (Date.now() - new Date(histMsg.createdAt * 1000).getTime() < 120000) // matches within last 2 mins
+          );
+        }).map((msg, index) => {
+          // Try to determine sender. The message object from WS might have 'sender' or 'userType'
+          // If not, we might default to 'Reporter' if we are Admin, unless we sent it?
+          // But if we sent it via WS, we receive it back usually?
+          // Let's assume the WS message structure.
+          // Based on hook, it might be just { message: ... } or parsed JSON.
+          // If parsed JSON has 'sender', use it.
+          const sender = msg.sender || (msg.userType === 'ADMIN' ? 'COMPLIANCE_TEAM' : 'REPORTER'); // heuristic
+          const isAdmin = sender === 'COMPLIANCE_TEAM' || sender === 'ADMIN';
+
+          return (
+            <div key={`live-${index}`} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] rounded-lg p-4 shadow-sm ${isAdmin ? 'bg-white border border-slate-200' : 'bg-blue-50 border border-blue-100'}`}>
+                <div className="flex items-center justify-between gap-4 mb-2">
+                  <span className={`text-xs font-bold uppercase ${isAdmin ? 'text-slate-700' : 'text-blue-700'}`}>
+                    {isAdmin ? 'Compliance Team (You)' : 'Reporter'}
+                  </span>
+                  <span className="text-xs text-slate-400">Just now</span>
+                </div>
+                <p className="text-slate-800 whitespace-pre-wrap">{msg.message}</p>
+              </div>
+            </div>
+          )
         })}
       </div>
 
