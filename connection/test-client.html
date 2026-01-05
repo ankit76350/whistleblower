@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test Client</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .log {
+            border: 1px solid #ccc;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-top: 10px;
+            background: #f9f9f9;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: grid;
+            gap: 10px;
+        }
+
+        input,
+        select,
+        button {
+            padding: 8px;
+        }
+
+        .message-box {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Whistleblower WebSocket Test</h2>
+
+        <div class="controls">
+            <label>WebSocket URL (from SAM Output):</label>
+            <input type="text" id="wsUrl" placeholder="wss://98gb1udew7.execute-api.eu-central-1.amazonaws.com/prod/" style="width: 100%;">
+
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="reportId" placeholder="Report ID (e.g. 123)" value="123">
+                <select id="userType">
+                    <option value="REPORTER">REPORTER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+                <button onclick="connect()">Connect</button>
+                <button onclick="disconnect()" disabled id="btnDisconnect">Disconnect</button>
+            </div>
+        </div>
+
+        <div class="message-box">
+            <input type="text" id="messageInput" placeholder="Message..." style="flex: 1;" disabled>
+            <button onclick="sendMessage()" id="btnSend" disabled>Send</button>
+        </div>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        let ws;
+
+        function log(msg) {
+            const div = document.getElementById('log');
+            const p = document.createElement('p');
+            p.textContent = `${new Date().toLocaleTimeString()} - ${msg}`;
+            div.appendChild(p);
+            div.scrollTop = div.scrollHeight;
+        }
+
+        function connect() {
+            const urlInput = document.getElementById('wsUrl').value;
+            const reportId = document.getElementById('reportId').value;
+            const userType = document.getElementById('userType').value;
+
+            if (!urlInput) {
+                alert("Please enter WebSocket URL");
+                return;
+            }
+
+            // Add query params
+            const fullUrl = `${urlInput}?reportId=${reportId}&userType=${userType}`;
+
+            log(`Connecting to ${fullUrl}...`);
+
+            ws = new WebSocket(fullUrl);
+
+            ws.onopen = () => {
+                log("Connected!");
+                document.getElementById('btnDisconnect').disabled = false;
+                document.getElementById('messageInput').disabled = false;
+                document.getElementById('btnSend').disabled = false;
+            };
+
+            ws.onmessage = (event) => {
+                log(`Received: ${event.data}`);
+            };
+
+            ws.onclose = () => {
+                log("Disconnected");
+                document.getElementById('btnDisconnect').disabled = true;
+                document.getElementById('messageInput').disabled = true;
+                document.getElementById('btnSend').disabled = true;
+            };
+
+            ws.onerror = (err) => {
+                log(`Error: ${err}`);
+                console.error(err);
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+            }
+        }
+
+        function sendMessage() {
+            if (!ws) return;
+            const input = document.getElementById('messageInput');
+            const reportId = document.getElementById('reportId').value;
+            const msg = input.value;
+
+            const payload = JSON.stringify({
+                action: 'sendMessage',
+                reportId: reportId,
+                message: msg
+            });
+
+            log(`Sending: ${payload}`);
+            ws.send(payload);
+            input.value = '';
+        }
+    </script>
+</body>
+
+</html>

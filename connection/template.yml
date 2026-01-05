@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Serverless Spring Boot 2 API - org.example::whistleblower-websocket-lambda
+
+Parameters:
+  MongoUri:
+    Type: String
+    Description: MongoDB Connection URI
+    NoEcho: true
+
+Globals:
+  Function:
+    Timeout: 20
+    MemorySize: 512
+    Runtime: java17
+    Environment:
+      Variables:
+        MONGO_URI: !Ref MongoUri
+
+Resources:
+  WhistleblowerWebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: WhistleblowerWebSocketApi
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+
+  ConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.example.handler.ConnectHandler::handleRequest
+      CodeUri: .
+      Policies: AWSLambdaBasicExecutionRole
+      Events:
+        WebSocketConnect:
+          Type: WebSocket
+          Properties:
+            ApiId: !Ref WhistleblowerWebSocketApi
+            RouteKey: $connect
+
+  DisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.example.handler.DisconnectHandler::handleRequest
+      CodeUri: .
+      Policies: AWSLambdaBasicExecutionRole
+      Events:
+        WebSocketDisconnect:
+          Type: WebSocket
+          Properties:
+            ApiId: !Ref WhistleblowerWebSocketApi
+            RouteKey: $disconnect
+
+  SendMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.example.handler.SendMessageHandler::handleRequest
+      CodeUri: .
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WhistleblowerWebSocketApi}/*"
+      Events:
+        WebSocketSendMessage:
+          Type: WebSocket
+          Properties:
+            ApiId: !Ref WhistleblowerWebSocketApi
+            RouteKey: sendMessage
+
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WhistleblowerWebSocketApi
+      StageName: Prod
+      AutoDeploy: true
+
+Outputs:
+  WebSocketURI:
+    Description: "The WSS Protocol URI to connect to"
+    Value: !Join [ "", [ "wss://", !Ref WhistleblowerWebSocketApi, ".execute-api.", !Ref "AWS::Region", ".amazonaws.com/Prod" ] ]
