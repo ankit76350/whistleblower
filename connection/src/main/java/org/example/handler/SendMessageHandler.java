@@ -23,7 +23,7 @@ public class SendMessageHandler implements RequestHandler<Map<String, Object>, M
 
         @Override
         public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
-                System.out.println("SendMessageHandler: Received request");
+                System.out.println("SendMessageHandler_1: Received request");
 
                 try {
                         Map<String, Object> requestContext = (Map<String, Object>) event.get("requestContext");
@@ -32,7 +32,7 @@ public class SendMessageHandler implements RequestHandler<Map<String, Object>, M
                                         + requestContext.get("domainName")
                                         + "/"
                                         + requestContext.get("stage");
-                        System.out.println("SendMessageHandler: Callback Endpoint: " + endpoint);
+                        System.out.println("SendMessageHandler_2: Callback Endpoint: " + endpoint);
 
                         AmazonApiGatewayManagementApi client = AmazonApiGatewayManagementApiClientBuilder.standard()
                                         .withEndpointConfiguration(
@@ -41,23 +41,23 @@ public class SendMessageHandler implements RequestHandler<Map<String, Object>, M
                                         .build();
 
                         Map<String, String> payload = mapper.readValue((String) event.get("body"), Map.class);
-                        System.out.println("SendMessageHandler: Parsed Body: " + payload);
+                        System.out.println("SendMessageHandler_3: Parsed Body: " + payload);
 
                         String reportId = payload.get("reportId");
                         String message = payload.get("message");
-                        System.out.println("SendMessageHandler: Looking for recipients for ReportID: " + reportId);
+                        System.out.println("SendMessageHandler_4: Looking for recipients for ReportID: " + reportId);
 
                         List<WebSocketConnection> connections = repository.findByReportId(reportId);
-                        System.out.println("SendMessageHandler: Found " + connections.size() + " connections");
+                        System.out.println("SendMessageHandler_5: Found " + connections.size() + " connections");
 
                         for (WebSocketConnection conn : connections) {
-                                System.out.println("SendMessageHandler: Sending to " + conn.getConnectionId());
+                                System.out.println("SendMessageHandler_6: Sending to " + conn.getConnectionId());
                                 try {
                                         client.postToConnection(new PostToConnectionRequest()
                                                         .withConnectionId(conn.getConnectionId())
                                                         .withData(ByteBuffer.wrap(message.getBytes())));
                                 } catch (GoneException e) {
-                                        System.out.println("SendMessageHandler: Connection Gone: "
+                                        System.out.println("SendMessageHandler_7: Connection Gone: "
                                                         + conn.getConnectionId());
                                         repository.deleteByConnectionId(conn.getConnectionId());
                                 }

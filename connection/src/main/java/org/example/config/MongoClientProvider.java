@@ -9,12 +9,17 @@ public class MongoClientProvider {
     private static MongoTemplate mongoTemplate;
 
     public static MongoTemplate getMongoTemplate() {
+        System.out.println("MongoClientProvider_1: Creating new Mongo Client...");
         if (mongoTemplate == null) {
-            System.out.println("MongoClientProvider: Creating new Mongo Client...");
-            MongoClient client = MongoClients.create(
-                    "mongodb+srv://ankit_mongodb_user:oiRvgDvLellC8ruD@mongodbcluster.0qemy0z.mongodb.net/whistleblower?appName=MongoDBCluster");
+            String connectionString = System.getenv("MONGO_URI");
+            System.out.println("MongoClientProvider_3: Using connection string: "
+                    + (connectionString.contains("@") ? "Confidential" : connectionString));
+
+            MongoClient client = MongoClients.create(connectionString);
             mongoTemplate = new MongoTemplate(client, "whistleblower");
+            System.out.println("MongoClientProvider_4: Mongo Template created successfully");
         }
+        System.out.println("MongoClientProvider_5: Returning Mongo Template" + mongoTemplate);
         return mongoTemplate;
     }
 }

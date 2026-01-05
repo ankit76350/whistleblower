@@ -14,21 +14,21 @@ public class ConnectHandler implements RequestHandler<Map<String, Object>, Map<S
 
         @Override
         public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
-                System.out.println("ConnectHandler: Received request");
-                System.out.println("ConnectHandler: Event: " + event);
+                System.out.println("ConnectHandler_1: Received request");
+                System.out.println("ConnectHandler_2: Event: " + event);
 
                 Map<String, Object> requestContext = (Map<String, Object>) event.get("requestContext");
-                System.out.println("ConnectHandler: Parsed requestContext");
+                System.out.println("ConnectHandler_3: Parsed requestContext");
 
                 String connectionId = (String) requestContext.get("connectionId");
-                System.out.println("ConnectHandler: Extracted connectionId: " + connectionId);
+                System.out.println("ConnectHandler_4: Extracted connectionId: " + connectionId);
 
                 Map<String, String> queryParams = (Map<String, String>) event.get("queryStringParameters");
-                System.out.println("ConnectHandler: Extracted queryParams: " + queryParams);
+                System.out.println("ConnectHandler_5: Extracted queryParams: " + queryParams);
 
                 String reportId = queryParams.get("reportId");
                 String userType = queryParams.get("userType");
-                System.out.println("ConnectHandler: Saving connection for ReportID: " + reportId + ", UserType: "
+                System.out.println("ConnectHandler_6: Saving connection for ReportID: " + reportId + ", UserType: "
                                 + userType);
 
                 repository.save(WebSocketConnection.builder()
@@ -37,9 +37,9 @@ public class ConnectHandler implements RequestHandler<Map<String, Object>, Map<S
                                 .userType(userType)
                                 .connectedAt(Instant.now())
                                 .build());
-                System.out.println("ConnectHandler: Saved connection to DB successfully");
+                System.out.println("ConnectHandler_7: Saved connection to DB successfully");
 
-                System.out.println("ConnectHandler: Returning 200 OK");
+                System.out.println("ConnectHandler_8: Returning 200 OK");
                 return Map.of("statusCode", 200);
         }
 }

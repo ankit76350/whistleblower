@@ -12,15 +12,15 @@ public class DisconnectHandler implements RequestHandler<Map<String, Object>, Ma
 
     @Override
     public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
-        System.out.println("DisconnectHandler: Received request");
+        System.out.println("DisconnectHandler_1: Received request");
 
         Map<String, Object> requestContext = (Map<String, Object>) event.get("requestContext");
 
         String connectionId = (String) requestContext.get("connectionId");
-        System.out.println("DisconnectHandler: Extracted connectionId to delete: " + connectionId);
+        System.out.println("DisconnectHandler_2: Extracted connectionId to delete: " + connectionId);
 
         repository.deleteByConnectionId(connectionId);
-        System.out.println("DisconnectHandler: Deleted connection from DB");
+        System.out.println("DisconnectHandler_3: Deleted connection from DB");
 
         return Map.of("statusCode", 200);
     }
