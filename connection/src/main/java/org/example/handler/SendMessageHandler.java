@@ -45,17 +45,44 @@ public class SendMessageHandler implements RequestHandler<Map<String, Object>, M
 
                         String reportId = payload.get("reportId");
                         String message = payload.get("message");
-                        System.out.println("SendMessageHandler_4: Looking for recipients for ReportID: " + reportId);
+
+                        String senderConnectionId = (String) requestContext.get("connectionId");
+                        System.out.println("SendMessageHandler_4: Sender Connection ID: " + senderConnectionId);
+
+                        // Robustly determine userType from DB
+                        String userType = "UNKNOWN";
+                        WebSocketConnection senderConn = repository.findByConnectionId(senderConnectionId);
+                        if (senderConn != null) {
+                                userType = senderConn.getUserType();
+                                System.out.println("SendMessageHandler_5: Resolved UserType from DB: " + userType);
+                        } else {
+                                // Fallback to payload (legacy/optimize) or stay UNKNOWN
+                                String payloadUserType = payload.get("userType");
+                                if (payloadUserType != null)
+                                        userType = payloadUserType;
+                                System.out.println("SendMessageHandler_5: UserType from Payload/Default: " + userType);
+                        }
 
                         List<WebSocketConnection> connections = repository.findByReportId(reportId);
-                        System.out.println("SendMessageHandler_5: Found " + connections.size() + " connections");
+                        System.out.println("SendMessageHandler_6: Found " + connections.size() + " connections");
+
+                        // Construct outgoing payload
+                        String outgoingData = mapper.writeValueAsString(Map.of(
+                                        "message", message,
+                                        "userType", userType,
+                                        "sender", userType // Adding both for compatibility
+                        ));
 
                         for (WebSocketConnection conn : connections) {
+                                if (conn.getConnectionId().equals(senderConnectionId)) {
+                                        continue;
+                                }
+
                                 System.out.println("SendMessageHandler_6: Sending to " + conn.getConnectionId());
                                 try {
                                         client.postToConnection(new PostToConnectionRequest()
                                                         .withConnectionId(conn.getConnectionId())
-                                                        .withData(ByteBuffer.wrap(message.getBytes())));
+                                                        .withData(ByteBuffer.wrap(outgoingData.getBytes())));
                                 } catch (GoneException e) {
                                         System.out.println("SendMessageHandler_7: Connection Gone: "
                                                         + conn.getConnectionId());
