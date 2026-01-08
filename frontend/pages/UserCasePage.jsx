@@ -82,6 +82,15 @@ const UserCasePage = () => {
     return key;
   };
 
+  const handleFileClick = async (key) => {
+    try {
+      const url = await api.getFileUrl(key);
+      window.open(url, '_blank');
+    } catch (error) {
+      toast.error('Failed to open file');
+    }
+  };
+
   const handleReply = (e) => {
     e.preventDefault();
     if (!replyText.trim()) return;
@@ -132,9 +141,13 @@ const UserCasePage = () => {
             {report.attachments?.length > 0 && (
               <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {report.attachments.map((att, i) => (
-                  <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
+                  <button
+                    key={i}
+                    onClick={() => handleFileClick(att)}
+                    className="flex items-center p-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 transition-colors text-left"
+                  >
                     <div className="font-medium truncate flex-1">{getFileName(att)}</div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -158,9 +171,13 @@ const UserCasePage = () => {
                 {msg.attachments?.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {msg.attachments.map((att, i) => (
-                      <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
+                      <button
+                        key={i}
+                        onClick={() => handleFileClick(att)}
+                        className="flex items-center p-2 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 text-xs text-slate-600 transition-colors text-left"
+                      >
                         <div className="font-medium truncate flex-1">{getFileName(att)}</div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}

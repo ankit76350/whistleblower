@@ -132,6 +132,20 @@ export const api = {
     }
   },
 
+  getFileUrl: async (key) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/file-url/${key}`);
+      if (!response.ok) {
+        throw new Error('Failed to get file URL');
+      }
+      const url = await response.text();
+      return url;
+    } catch (error) {
+      console.error('Error fetching file URL:', error);
+      throw error;
+    }
+  },
+
   replyToReport: async (reportId, message, sender = 'COMPLIANCE_TEAM', files) => {
     try {
       // Process attachments if any
