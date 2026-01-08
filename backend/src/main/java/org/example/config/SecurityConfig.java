@@ -31,6 +31,8 @@ public class SecurityConfig {
                         // Public endpoints (no auth required)
                         // Reporter/whistleblower endpoints are public
                         .requestMatchers("/whistleblower/anonymous/**").permitAll()
+                        .requestMatchers("/whistleblower/**").permitAll()
+                        .requestMatchers("/upload/**").permitAll()
                         .requestMatchers("/whistleblower/report/*/conversation").permitAll()
                         .requestMatchers("/whistleblower/reports/*/messages").permitAll()
                         .requestMatchers("/whistleblower/admin/**").permitAll()
