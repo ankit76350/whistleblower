@@ -188,4 +188,13 @@ public class WhistleblowerController {
                                 conversationService.getConversationBySecretKey(secretKey));
         }
 
+        // Get Presigned URL for file
+        @GetMapping("/file-url/{key}")
+        public ResponseEntity<String> getFileUrl(@PathVariable String key) {
+                // In a real app, you should verify if the user has access to this file
+                // But for now, we assume the key is hard to guess (UUID)
+                String url = s3Service.getPresignedUrl(key);
+                return ResponseEntity.ok(url);
+        }
+
 }

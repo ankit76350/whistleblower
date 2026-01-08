@@ -32,4 +32,25 @@ public class S3Service {
         return fileName;
     }
 
+    @Autowired
+    private software.amazon.awssdk.services.s3.presigner.S3Presigner s3Presigner;
+
+    public String getPresignedUrl(String key) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest presignRequest = software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
+                .builder()
+                .signatureDuration(java.time.Duration.ofMinutes(15))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest presignedRequest = s3Presigner
+                .presignGetObject(presignRequest);
+
+        return presignedRequest.url().toString();
+    }
+
 }
