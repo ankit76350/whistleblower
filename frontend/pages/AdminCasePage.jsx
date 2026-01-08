@@ -174,6 +174,17 @@ const AdminCasePage = () => {
     }
   };
 
+  const getFileName = (key) => {
+    if (!key) return 'File';
+    const splitIndex = key.indexOf('_');
+    if (splitIndex !== -1) {
+      return key.substring(splitIndex + 1);
+    }
+    return key;
+  };
+
+  const activeStatus = report.status || BackendStatus.New;
+
   return (
     <div className="max-w-4xl mx-auto">
       <button
@@ -199,7 +210,7 @@ const AdminCasePage = () => {
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-slate-700">Status:</span>
           <select
-            value={report.status}
+            value={activeStatus}
             onChange={(e) => handleStatusSelect(e.target.value)}
             className="border border-slate-300 rounded-lg py-2 pl-3 pr-8 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white font-medium"
           >
@@ -227,8 +238,7 @@ const AdminCasePage = () => {
               <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {report.attachments.map((att, i) => (
                   <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
-                    <div className="font-medium truncate flex-1">{att.name}</div>
-                    <div className="text-slate-400 ml-2">{(att.size / 1024).toFixed(0)}KB</div>
+                    <div className="font-medium truncate flex-1">{getFileName(att)}</div>
                   </div>
                 ))}
               </div>
@@ -254,8 +264,7 @@ const AdminCasePage = () => {
                   <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {msg.attachments.map((att, i) => (
                       <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
-                        <div className="font-medium truncate flex-1">{att.name}</div>
-                        <div className="text-slate-400 ml-2">{(att.size / 1024).toFixed(0)}KB</div>
+                        <div className="font-medium truncate flex-1">{getFileName(att)}</div>
                       </div>
                     ))}
                   </div>

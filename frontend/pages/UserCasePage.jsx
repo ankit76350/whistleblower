@@ -72,6 +72,16 @@ const UserCasePage = () => {
   // Extract report and messages from API response
   const { report, messages } = data;
 
+  // Helper to extract filename from S3 key (UUID_filename)
+  const getFileName = (key) => {
+    if (!key) return 'File';
+    const splitIndex = key.indexOf('_');
+    if (splitIndex !== -1) {
+      return key.substring(splitIndex + 1);
+    }
+    return key;
+  };
+
   const handleReply = (e) => {
     e.preventDefault();
     if (!replyText.trim()) return;
@@ -85,7 +95,7 @@ const UserCasePage = () => {
         className="flex items-center text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-1" />
-        Back to Login
+        Check Status
       </button>
 
       {/* Header */}
@@ -123,8 +133,7 @@ const UserCasePage = () => {
               <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {report.attachments.map((att, i) => (
                   <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
-                    <div className="font-medium truncate flex-1">{att.name}</div>
-                    <div className="text-slate-400 ml-2">{(att.size / 1024).toFixed(0)}KB</div>
+                    <div className="font-medium truncate flex-1">{getFileName(att)}</div>
                   </div>
                 ))}
               </div>
@@ -150,8 +159,7 @@ const UserCasePage = () => {
                   <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {msg.attachments.map((att, i) => (
                       <div key={i} className="flex items-center p-2 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
-                        <div className="font-medium truncate flex-1">{att.name}</div>
-                        <div className="text-slate-400 ml-2">{(att.size / 1024).toFixed(0)}KB</div>
+                        <div className="font-medium truncate flex-1">{getFileName(att)}</div>
                       </div>
                     ))}
                   </div>
