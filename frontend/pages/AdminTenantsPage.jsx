@@ -101,10 +101,11 @@ const AdminTenantsPage = () => {
     setModalType('delete');
   };
 
-  const filteredTenants = tenants?.filter(t =>
-    t.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.tenantId.toLowerCase().includes(searchTerm.toLowerCase())
+  const tenantsList = Array.isArray(tenants) ? tenants : [];
+  const filteredTenants = tenantsList.filter(t =>
+    t.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    t.tenantId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
