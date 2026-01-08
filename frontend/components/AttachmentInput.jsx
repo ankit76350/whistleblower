@@ -38,10 +38,10 @@ const AttachmentInput = ({ files, onChange, maxFiles = 3 }) => {
             className="hidden"
             onChange={handleFileChange}
             disabled={files.length >= maxFiles}
-            accept=".pdf,.jpg,.png,.txt,.docx"
+            accept="*"
           />
         </label>
-        <span className="text-xs text-slate-500">Max 10MB (PDF, PNG, JPG, TXT)</span>
+        <span className="text-xs text-slate-500">Max 10MB (Images, PDF, Video, Docs)</span>
       </div>
 
       {files.length > 0 && (

@@ -43,30 +43,31 @@ const getAuthHeaders = () => {
 
 export const api = {
   createReport: async (tenantId, subject, message, files) => {
+    console.log("createReport called with files:", files);
     try {
-      // Process attachments if any
-      const attachmentData = files && files.length > 0
-        ? await Promise.all(
-          files.map(async (f) => ({
-            name: f.name,
-            size: f.size,
-            type: f.type,
-            dataUrl: await fileToBase64(f),
-          }))
-        )
-        : null;
+      const formData = new FormData();
+
+      const reportData = {
+        tenantId,
+        subject,
+        message,
+        attachments: [] // Attachments list in JSON can be empty or used for other metadata
+      };
+
+      // Append reportData as JSON blob
+      formData.append('reportData', new Blob([JSON.stringify(reportData)], { type: 'application/json' }));
+
+      // Append attachments if any
+      if (files && files.length > 0) {
+        files.forEach((file) => {
+          formData.append('attachments', file);
+        });
+      }
 
       const response = await fetch(`${API_BASE_URL}/whistleblower/anonymous/submitNewReport`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tenantId,
-          subject,
-          message,
-          attachments: attachmentData,
-        }),
+        // Content-Type header matches boundary automatically when using FormData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -74,7 +75,7 @@ export const api = {
       }
 
       const data = await response.json();
-      return data; // Returns: { id, reportId, secretKey, tenantId, subject, message, status, etc. }
+      return data;
     } catch (error) {
       console.error('Error submitting report:', error);
       throw error;
@@ -134,28 +135,28 @@ export const api = {
   replyToReport: async (reportId, message, sender = 'COMPLIANCE_TEAM', files) => {
     try {
       // Process attachments if any
-      const attachmentData = files && files.length > 0
-        ? await Promise.all(
-          files.map(async (f) => ({
-            name: f.name,
-            size: f.size,
-            type: f.type,
-            dataUrl: await fileToBase64(f),
-          }))
-        )
-        : null;
+      // const attachmentData = ... (Removed as we now use FormData)
+
+      const formData = new FormData();
+
+      const messageData = {
+        sender,
+        message,
+        attachments: []
+      };
+
+      formData.append('messageData', new Blob([JSON.stringify(messageData)], { type: 'application/json' }));
+
+      if (files && files.length > 0) {
+        files.forEach((file) => {
+          formData.append('attachments', file);
+        });
+      }
 
       const response = await fetch(`${API_BASE_URL}/whistleblower/reports/${reportId}/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify({
-          sender,
-          message,
-          attachments: attachmentData,
-        }),
+        // Content-Type matches boundary
+        body: formData,
       });
 
       if (!response.ok) {
