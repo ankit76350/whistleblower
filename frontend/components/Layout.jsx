@@ -1,10 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Lock, Briefcase, Users } from 'lucide-react';
-import { useStore } from '../store';
+
 
 const Layout = ({ children }) => {
-  const { isAdminMode, toggleAdminMode } = useStore();
   const location = useLocation();
 
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -28,16 +27,15 @@ const Layout = ({ children }) => {
               Check Status
             </Link>
 
-            {/* Admin Toggle for Demo Purposes */}
-            <button
-              onClick={toggleAdminMode}
-              className={`flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${isAdminMode ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+            <Link
+              to="/admin/inbox"
+              className={`flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${location.pathname.startsWith('/admin') ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
             >
               <Briefcase className="w-3 h-3 mr-1" />
-              {isAdminMode ? 'Admin Active' : 'Admin View'}
-            </button>
+              Admin Portal
+            </Link>
 
-            {isAdminMode && (
+            {location.pathname.startsWith('/admin') && (
               <div className="flex items-center space-x-3 border-l border-slate-200 pl-4 ml-4">
                 <Link to="/admin/inbox" className={`text-sm font-medium ${location.pathname.includes('/admin/inbox') ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>
                   Inbox
@@ -53,15 +51,7 @@ const Layout = ({ children }) => {
       </header>
 
       <main className="flex-grow w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {isAdminRoute && !isAdminMode ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <Lock className="w-12 h-12 text-slate-300 mb-4" />
-            <h2 className="text-xl font-semibold text-slate-700">Access Restricted</h2>
-            <p className="text-slate-500 mt-2">Please enable Admin Mode (top right) to view this area.</p>
-          </div>
-        ) : (
-          children
-        )}
+        {children}
       </main>
 
       <footer className="bg-white border-t border-slate-200 py-6 mt-auto">
