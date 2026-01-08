@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import AttachmentInput from '../components/AttachmentInput';
 import StatusBadge from '../components/StatusBadge';
 import { useWebSocket } from '../hooks/useWebSocket';
+import FilePreviewModal from '../components/FilePreviewModal';
 
 // Convert Unix timestamp (seconds) to date string
 const formatDate = (timestamp) => {
@@ -26,6 +27,11 @@ const UserCasePage = () => {
 
   const [replyText, setReplyText] = useState('');
   const [files, setFiles] = useState([]);
+
+  // Modal State
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewName, setPreviewName] = useState('');
 
   // 1. Fetch Report Data using secretKey
   const { data, isLoading, isError } = useQuery({
@@ -85,7 +91,9 @@ const UserCasePage = () => {
   const handleFileClick = async (key) => {
     try {
       const url = await api.getFileUrl(key);
-      window.open(url, '_blank');
+      setPreviewUrl(url);
+      setPreviewName(getFileName(key));
+      setPreviewOpen(true);
     } catch (error) {
       toast.error('Failed to open file');
     }
@@ -242,6 +250,14 @@ const UserCasePage = () => {
           </div>
         </form>
       </div>
+
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        fileUrl={previewUrl}
+        fileName={previewName}
+      />
     </div>
   );
 };
