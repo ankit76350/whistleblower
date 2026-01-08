@@ -5,8 +5,11 @@ import org.example.model.WhistleblowerReport;
 import org.example.service.ConversationService;
 import org.example.service.TenantService;
 import lombok.RequiredArgsConstructor;
+import org.example.service.S3Service;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.example.dto.CreateReportRequest;
 import org.example.dto.SendMessageRequest;
 import org.example.model.ApiResponse;
@@ -14,6 +17,9 @@ import org.example.model.ConversationMessage;
 import org.example.dto.ReportWithConversationResponse;
 import org.example.dto.AdminReportConversationResponse;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @CrossOrigin
@@ -23,6 +29,7 @@ import java.util.List;
 public class WhistleblowerController {
 
         private final TenantService service;
+        private final S3Service s3Service;
 
         // ? Adding new tenant
         @PostMapping("/admin/addNewTenant")
@@ -88,13 +95,40 @@ public class WhistleblowerController {
         private final ConversationService conversationService;
 
         // Public – anonymous submit
-        @PostMapping("/anonymous/submitNewReport")
-        public WhistleblowerReport createReport(@RequestBody CreateReportRequest req) {
+        // Public – anonymous submit
+        @PostMapping(value = "/anonymous/submitNewReport", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public WhistleblowerReport createReport(
+                        @RequestPart("reportData") CreateReportRequest req,
+                        @RequestParam(value = "attachments", required = false) List<MultipartFile> files)
+                        throws IOException {
+
+                System.out.println("DEBUG: createReport called");
+                List<String> attachments = new ArrayList<>();
+
+                if (files != null && !files.isEmpty()) {
+                        System.out.println("DEBUG: Files received count: " + files.size());
+                        for (MultipartFile file : files) {
+                                System.out.println("DEBUG: Processing file: " + file.getOriginalFilename());
+                                String fileKey = s3Service.uploadFile(file);
+                                attachments.add(fileKey);
+                        }
+                } else {
+                        System.out.println("DEBUG: Files list is null or empty");
+                }
+
+                // If JSON had attachments, we might want to keep or merge them.
+                // For this use case, we can assume the frontend sends empty attachments list
+                // and the image is the primary attachment.
+                // Or merge:
+                if (req.getAttachments() != null) {
+                        attachments.addAll(req.getAttachments());
+                }
+
                 return conversationService.createReport(
                                 req.getTenantId(),
                                 req.getSubject(),
                                 req.getMessage(),
-                                req.getAttachments());
+                                attachments);
         }
 
         // Get Tenant's Reports
@@ -107,16 +141,31 @@ public class WhistleblowerController {
         }
 
         // Add new message to a report conversation
-        @PostMapping("/reports/{reportId}/messages")
+        // Add new message to a report conversation
+        @PostMapping(value = "/reports/{reportId}/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<ConversationMessage> sendNewMessage(
                         @PathVariable String reportId,
-                        @RequestBody SendMessageRequest request) {
+                        @RequestPart("messageData") SendMessageRequest request,
+                        @RequestParam(value = "attachments", required = false) List<MultipartFile> files)
+                        throws IOException {
+
+                List<String> attachments = new ArrayList<>();
+                if (files != null && !files.isEmpty()) {
+                        for (MultipartFile file : files) {
+                                String fileKey = s3Service.uploadFile(file);
+                                attachments.add(fileKey);
+                        }
+                }
+
+                if (request.getAttachments() != null) {
+                        attachments.addAll(request.getAttachments());
+                }
 
                 ConversationMessage message = conversationService.addMessage(
                                 reportId,
                                 request.getSender(),
                                 request.getMessage(),
-                                request.getAttachments());
+                                attachments);
 
                 return ResponseEntity.ok(message);
 

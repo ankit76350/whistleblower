@@ -1,6 +1,5 @@
 package org.example.service;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,12 +22,14 @@ public class S3Service {
     @Value("${aws.bucket.name}")
     private String bucketName;
 
-    public void uploadFile(MultipartFile file) throws IOException {
+    public String uploadFile(MultipartFile file) throws IOException {
+        String fileName = java.util.UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         s3Client.putObject(PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(file.getOriginalFilename())
-                        .build(),
+                .bucket(bucketName)
+                .key(fileName)
+                .build(),
                 RequestBody.fromBytes(file.getBytes()));
+        return fileName;
     }
 
 }
