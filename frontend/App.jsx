@@ -46,11 +46,7 @@ const App = () => {
                   <AdminCasePage />
                 </ProtectedRoute>
               } />
-              <Route path="/admin/tenants" element={
-                <ProtectedRoute>
-                  <AdminTenantsPage />
-                </ProtectedRoute>
-              } />
+              <Route path="/admin/tenants" element={<AdminTenantsPage />} />
             </Routes>
           </Layout>
         </BrowserRouter>
