@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Send, ArrowLeft, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
 import { useStore } from '../store';
@@ -16,6 +17,7 @@ const formatDate = (timestamp) => {
 };
 
 const UserCasePage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -62,18 +64,18 @@ const UserCasePage = () => {
 
       setReplyText('');
       setFiles([]);
-      toast.success('Reply sent');
+      toast.success(t('userCase.replySent'));
       queryClient.invalidateQueries({ queryKey: ['report', secretKey] });
     },
-    onError: () => toast.error('Failed to send reply'),
+    onError: () => toast.error(t('userCase.replyError')),
   });
 
   if (!secretKey) {
     return <Navigate to="/check" replace />;
   }
 
-  if (isLoading) return <div className="p-10 text-center">Loading case...</div>;
-  if (isError || !data) return <div className="p-10 text-center text-red-600">Error loading report. Session may have expired.</div>;
+  if (isLoading) return <div className="p-10 text-center">{t('userCase.loading')}</div>;
+  if (isError || !data) return <div className="p-10 text-center text-red-600">{t('userCase.errorLoad')}</div>;
 
   // Extract report and messages from API response
   const { report, messages } = data;
@@ -112,7 +114,7 @@ const UserCasePage = () => {
         className="flex items-center text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-1" />
-        Check Status
+        {t('userCase.checkStatus')}
       </button>
 
       {/* Header */}
@@ -123,12 +125,12 @@ const UserCasePage = () => {
             <span>ID: {report.reportId.substring(0, 8)}</span>
             <span>•</span>
             <span>{formatDate(report.createdAt)}</span>
-            {isConnected ? <span className="text-green-500 text-xs font-bold">• Live</span> : <span className="text-slate-300 text-xs">• Offline</span>}
+            {isConnected ? <span className="text-green-500 text-xs font-bold">• {t('userCase.live')}</span> : <span className="text-slate-300 text-xs">• {t('userCase.offline')}</span>}
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-slate-700">Status:</span>
+          <span className="text-sm font-medium text-slate-700">{t('common.status')}:</span>
           <StatusBadge status={report.status} />
         </div>
       </div>
@@ -140,7 +142,7 @@ const UserCasePage = () => {
           <div className="max-w-[85%] rounded-lg p-4 shadow-sm bg-blue-50 border border-blue-100">
             <div className="flex items-center justify-between gap-4 mb-2">
               <span className="text-xs font-bold uppercase text-blue-700">
-                You
+                {t('userCase.you')}
               </span>
               <span className="text-xs text-slate-400">{formatDate(report.createdAt)}</span>
             </div>
@@ -170,7 +172,7 @@ const UserCasePage = () => {
               <div className={`max-w-[85%] rounded-lg p-4 shadow-sm ${isReporter ? 'bg-blue-50 border border-blue-100' : 'bg-white border border-slate-200'}`}>
                 <div className="flex items-center justify-between gap-4 mb-2">
                   <span className={`text-xs font-bold uppercase ${isReporter ? 'text-blue-700' : 'text-slate-700'}`}>
-                    {isReporter ? 'You' : 'Compliance Team'}
+                    {isReporter ? t('userCase.you') : t('userCase.complianceTeam')}
                   </span>
                   <span className="text-xs text-slate-400">{formatDate(msg.createdAt)}</span>
                 </div>
@@ -211,7 +213,7 @@ const UserCasePage = () => {
               <div className={`max-w-[85%] rounded-lg p-4 shadow-sm ${isReporter ? 'bg-blue-50 border border-blue-100' : 'bg-white border border-slate-200'}`}>
                 <div className="flex items-center justify-between gap-4 mb-2">
                   <span className={`text-xs font-bold uppercase ${isReporter ? 'text-blue-700' : 'text-slate-700'}`}>
-                    {isReporter ? 'You' : 'Compliance Team'}
+                    {isReporter ? t('userCase.you') : t('userCase.complianceTeam')}
                   </span>
                   <span className="text-xs text-slate-400">Just now</span>
                 </div>
@@ -226,14 +228,14 @@ const UserCasePage = () => {
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
         <h3 className="flex items-center text-sm font-semibold text-slate-700 mb-3">
           <User className="w-4 h-4 mr-2" />
-          Your Reply
+          {t('userCase.yourReply')}
         </h3>
         <form onSubmit={handleReply}>
           <textarea
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none min-h-[120px] mb-4"
-            placeholder="Type your message here..."
+            placeholder={t('userCase.placeholder')}
           />
           <div className="flex justify-between items-center">
             <div className="flex-1">
@@ -245,7 +247,7 @@ const UserCasePage = () => {
               className="ml-4 px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg flex items-center transition-colors disabled:opacity-50"
             >
               <Send className="w-4 h-4 mr-2" />
-              Send Reply
+              {t('userCase.sendReply')}
             </button>
           </div>
         </form>

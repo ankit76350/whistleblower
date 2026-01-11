@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Download } from 'lucide-react';
 
 const FilePreviewModal = ({ isOpen, onClose, fileUrl, fileName }) => {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     const getFileType = (name) => {
@@ -20,7 +22,7 @@ const FilePreviewModal = ({ isOpen, onClose, fileUrl, fileName }) => {
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
-                    <h3 className="font-semibold text-slate-700 truncate">{fileName || 'File Preview'}</h3>
+                    <h3 className="font-semibold text-slate-700 truncate">{fileName || t('components.filePreview')}</h3>
                     <div className="flex items-center gap-2">
                         <a
                             href={fileUrl}
@@ -28,14 +30,14 @@ const FilePreviewModal = ({ isOpen, onClose, fileUrl, fileName }) => {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
-                            title="Download"
+                            title={t('components.download')}
                         >
                             <Download className="w-5 h-5" />
                         </a>
                         <button
                             onClick={onClose}
                             className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Close"
+                            title={t('components.close')}
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -65,7 +67,7 @@ const FilePreviewModal = ({ isOpen, onClose, fileUrl, fileName }) => {
                             <div className="mb-4 text-slate-400">
                                 <Download className="w-16 h-16 mx-auto mb-2" />
                             </div>
-                            <p className="text-slate-600 mb-4">This file type cannot be previewed.</p>
+                            <p className="text-slate-600 mb-4">{t('components.cannotPreview')}</p>
                             <a
                                 href={fileUrl}
                                 download={fileName}
@@ -73,7 +75,7 @@ const FilePreviewModal = ({ isOpen, onClose, fileUrl, fileName }) => {
                                 rel="noopener noreferrer"
                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg inline-flex items-center transition-colors"
                             >
-                                Download File
+                                {t('components.downloadFile')}
                             </a>
                         </div>
                     )}

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { Building2, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 
 const LandingPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [tenants, setTenants] = useState([]);
   const [selectedTenant, setSelectedTenant] = useState('');
@@ -22,13 +24,13 @@ const LandingPage = () => {
         }
       } catch (err) {
         console.error('Failed to fetch tenants:', err);
-        setError('Failed to load organizations');
+        setError(t('landing.error'));
       } finally {
         setIsLoading(false);
       }
     };
     fetchTenants();
-  }, []);
+  }, [t]);
 
   const handleSubmit = () => {
     if (selectedTenant) {
@@ -45,10 +47,10 @@ const LandingPage = () => {
             <ShieldCheck className="w-10 h-10" />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            Secure Whistleblower Box
+            {t('landing.heroTitle')}
           </h1>
           <p className="text-lg text-slate-600">
-            Submit confidential reports anonymously. Your identity is protected.
+            {t('landing.heroSubtitle')}
           </p>
         </div>
 
@@ -56,17 +58,17 @@ const LandingPage = () => {
         <div className="bg-white shadow-lg border border-slate-200 rounded-2xl p-8">
           <div className="mb-6">
             <label className="block text-sm font-semibold text-slate-700 mb-2 text-left">
-              Select Organization
+              {t('landing.selectOrg')}
             </label>
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                <span className="ml-2 text-slate-500">Loading organizations...</span>
+                <span className="ml-2 text-slate-500">{t('landing.loading')}</span>
               </div>
             ) : error ? (
               <div className="text-red-500 text-sm py-4">{error}</div>
             ) : tenants.length === 0 ? (
-              <div className="text-slate-500 text-sm py-4">No organizations available</div>
+              <div className="text-slate-500 text-sm py-4">{t('landing.noOrgs')}</div>
             ) : (
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -90,12 +92,12 @@ const LandingPage = () => {
             disabled={!selectedTenant || isLoading}
             className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold text-lg rounded-xl shadow-md hover:shadow-lg transition-all"
           >
-            Submit Anonymous Report
+            {t('landing.submitBtn')}
             <ArrowRight className="w-5 h-5" />
           </button>
 
           <p className="mt-4 text-xs text-slate-500">
-            Your connection is secure. No cookies or tracking used.
+            {t('landing.securityNote')}
           </p>
         </div>
       </div>

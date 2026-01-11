@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { AuthProvider } from 'react-oidc-context';
 import { store } from './store/reduxStore';
 import App from './App';
+import './i18n';
 import cognitoAuthConfig from './services/authConfig';
 
 const rootElement = document.getElementById('root');

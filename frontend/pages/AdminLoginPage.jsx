@@ -1,4 +1,6 @@
 import { useAuth } from 'react-oidc-context';
+import { useTranslation } from 'react-i18next';
+import { Shield } from 'lucide-react';
 
 /**
  * Admin Login Page using react-oidc-context
@@ -6,15 +8,15 @@ import { useAuth } from 'react-oidc-context';
  */
 const AdminLoginPage = () => {
     const auth = useAuth();
+    const { t } = useTranslation();
 
     // Show loading state
     if (auth.isLoading) {
         return (
-            <div style={containerStyle}>
-                <div style={cardStyle}>
-                    <div style={spinnerStyle}></div>
-                    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                    <h2 style={{ margin: '0 0 16px', fontSize: '24px' }}>Loading...</h2>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 p-6 font-sans text-slate-900">
+                <div className="bg-slate-100 rounded-2xl p-12 text-center w-full max-w-md border border-slate-200">
+                    <div className="w-12 h-12 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
+                    <h2 className="text-2xl font-bold mb-4">{t('common.loading')}</h2>
                 </div>
             </div>
         );
@@ -23,67 +25,48 @@ const AdminLoginPage = () => {
     // Show error state
     if (auth.error) {
         return (
-            <div style={containerStyle}>
-                <div style={cardStyle}>
-                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>❌</div>
-                    <h2 style={{ margin: '0 0 16px', fontSize: '24px' }}>Authentication Error</h2>
-                    <p style={{ color: '#94a3b8', margin: '0 0 24px' }}>{auth.error.message}</p>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 p-6 font-sans text-slate-900">
+                <div className="bg-slate-100 rounded-2xl p-12 text-center w-full max-w-md border border-slate-200">
+                    <div className="text-5xl mb-4">❌</div>
+                    <h2 className="text-2xl font-bold mb-4">{t('common.error')}</h2>
+                    <p className="text-slate-500 mb-6">{auth.error.message}</p>
                     <button
-                        style={buttonStyle}
                         onClick={() => auth.signinRedirect()}
+                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-blue-500/30"
                     >
-                        Try Again
+                        {t('common.tryAgain')}
                     </button>
                 </div>
             </div>
         );
     }
 
-   
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 p-6 font-sans text-slate-900">
+            <div className="bg-slate-100 rounded-2xl p-12 text-center w-full max-w-md border border-slate-200 shadow-xl">
+                <div className="flex justify-center mb-6">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Shield className="w-8 h-8 text-blue-600" />
+                    </div>
+                </div>
+                <h1 className="text-3xl font-bold mb-2 bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    {t('admin.portalLogin')}
+                </h1>
+                <p className="text-slate-500 mb-8 max-w-xs mx-auto">
+                    {t('admin.portalSubtitle')}
+                </p>
+                <button
+                    onClick={() => auth.signinRedirect()}
+                    className="w-full px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                    {t('admin.loginButton')}
+                </button>
+            </div>
+            <p className="mt-8 text-xs text-slate-400 font-medium">
+                Protected by Enterprise Grade Security
+            </p>
+        </div>
+    );
 };
-
-// Styles
-const containerStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#e2e8f0',
-    color: '#e2e8f0',
-    fontFamily: 'Inter, system-ui, sans-serif',
-    padding: '20px',
-};
-
-const cardStyle = {
-    backgroundColor: '#e2e8f0',
-    borderRadius: '16px',
-    padding: '48px',
-    textAlign: 'center',
-    // boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-    maxWidth: '420px',
-    width: '100%',
-    border: '1px solid #e2e8f0',
-};
-
-const spinnerStyle = {
-    width: '48px',
-    height: '48px',
-    border: '4px solid #334155',
-    borderTop: '4px solid #3b82f6',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    margin: '0 auto 24px',
-};
-
-const titleStyle = {
-    fontSize: '28px',
-    fontWeight: '700',
-    margin: '0 0 8px',
-    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-};
-
 
 export default AdminLoginPage;

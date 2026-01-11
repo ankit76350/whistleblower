@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, AlertTriangle, Info, Trash2, HelpCircle } from 'lucide-react';
 
 const Modal = ({
@@ -7,11 +8,17 @@ const Modal = ({
   onConfirm,
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   type = 'info',
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
+  
+  // Defaults using translation if not provided
+  const finalConfirmLabel = confirmLabel || t('common.confirm');
+  const finalCancelLabel = cancelLabel || t('common.cancel');
+
   if (!isOpen) return null;
 
   const typeStyles = {
@@ -61,7 +68,7 @@ const Modal = ({
               disabled={isLoading}
               className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
-              {cancelLabel}
+              {finalCancelLabel}
             </button>
             <button
               onClick={onConfirm}
@@ -74,7 +81,7 @@ const Modal = ({
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : (
-                confirmLabel
+                finalConfirmLabel
               )}
             </button>
           </div>

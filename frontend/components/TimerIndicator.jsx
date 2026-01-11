@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { ReportStatus } from '../services/mockBackend';
 
 const TimerIndicator = ({ createdAt, status }) => {
+  const { t } = useTranslation();
   // If status is not New, the timer pressure is off (technically, though deadlines exist for resolving, the 7-day is for acknowledgment)
   const isAcknowledged = status !== ReportStatus.New;
 
@@ -16,7 +18,7 @@ const TimerIndicator = ({ createdAt, status }) => {
     return (
       <span className="inline-flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
         <Clock className="w-3 h-3 mr-1" />
-        Acknowledged
+        {t('components.acknowledged')}
       </span>
     );
   }
@@ -25,7 +27,7 @@ const TimerIndicator = ({ createdAt, status }) => {
     return (
       <span className="inline-flex items-center text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded animate-pulse">
         <AlertTriangle className="w-3 h-3 mr-1" />
-        Overdue ({diffDays}d)
+        {t('components.overdue')} ({t('components.daysAgo', { count: diffDays })})
       </span>
     );
   }
@@ -35,9 +37,9 @@ const TimerIndicator = ({ createdAt, status }) => {
   return (
     <span className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded ${isUrgent ? 'text-amber-700 bg-amber-50' : 'text-slate-500 bg-slate-100'}`}>
       <Clock className="w-3 h-3 mr-1" />
-      {diffDays === 0 ? 'Today' : `${diffDays}d ago`}
+      {diffDays === 0 ? t('components.today') : t('components.daysAgo', { count: diffDays })}
       <span className="mx-1">•</span>
-      {daysLeft}d left
+      {t('components.daysLeft', { count: daysLeft })}
     </span>
   );
 };

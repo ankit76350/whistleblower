@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from 'react-oidc-context';
+import { useTranslation } from 'react-i18next';
 import { Send, ArrowLeft, Shield, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
@@ -24,13 +25,8 @@ const formatDate = (timestamp) => {
   return new Date(timestamp * 1000).toLocaleString();
 };
 
-// Convert backend status (e.g., IN_PROGRESS) to human-readable format
-const formatStatus = (status) => {
-  if (!status) return '';
-  return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/\B\w+/g, c => c.toLowerCase());
-};
-
 const AdminCasePage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -86,7 +82,7 @@ const AdminCasePage = () => {
 
       setReplyText('');
       setFiles([]);
-      toast.success('Reply sent');
+      toast.success(t('userCase.replySent'));
       queryClient.invalidateQueries({ queryKey: ['report-admin', tenantId, id] });
     },
   });
@@ -104,7 +100,7 @@ const AdminCasePage = () => {
 
   const isLoading = isLoadingTenants || (tenantId && isLoadingReport);
 
-  if (isLoading || !data) return <div className="p-10 text-center">Loading case...</div>;
+  if (isLoading || !data) return <div className="p-10 text-center">{t('userCase.loading')}</div>;
 
   // Extract report and messages from the API response
   const { report, messages } = data;
@@ -148,6 +144,7 @@ const AdminCasePage = () => {
   };
 
   const activeStatus = report.status || BackendStatus.New;
+  const formatStatus = (s) => t(`status.${s}`);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -156,7 +153,7 @@ const AdminCasePage = () => {
         className="flex items-center text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-1" />
-        Back to Inbox
+        {t('admin.backToInbox')}
       </button>
 
       {/* Admin Controls */}
@@ -167,12 +164,12 @@ const AdminCasePage = () => {
             <span>ID: {report.reportId}</span>
             <span>•</span>
             <span>{formatDate(report.createdAt)}</span>
-            {isConnected ? <span className="text-green-500 text-xs font-bold">• Live</span> : <span className="text-slate-300 text-xs">• Offline</span>}
+            {isConnected ? <span className="text-green-500 text-xs font-bold">• {t('userCase.live')}</span> : <span className="text-slate-300 text-xs">• {t('userCase.offline')}</span>}
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-slate-700">Status:</span>
+          <span className="text-sm font-medium text-slate-700">{t('common.status')}:</span>
           <select
             value={activeStatus}
             onChange={(e) => handleStatusSelect(e.target.value)}
@@ -222,7 +219,7 @@ const AdminCasePage = () => {
               <div className={`max-w-[85%] rounded-lg p-4 shadow-sm ${isAdmin ? 'bg-white border border-slate-200' : 'bg-blue-50 border border-blue-100'}`}>
                 <div className="flex items-center justify-between gap-4 mb-2">
                   <span className={`text-xs font-bold uppercase ${isAdmin ? 'text-slate-700' : 'text-blue-700'}`}>
-                    {isAdmin ? 'Compliance Team (You)' : 'Reporter'}
+                    {isAdmin ? `${t('userCase.complianceTeam')} (${t('userCase.you')})` : 'Reporter'}
                   </span>
                   <span className="text-xs text-slate-400">{formatDate(msg.createdAt)}</span>
                 </div>
@@ -261,7 +258,7 @@ const AdminCasePage = () => {
               <div className={`max-w-[85%] rounded-lg p-4 shadow-sm ${isAdmin ? 'bg-white border border-slate-200' : 'bg-blue-50 border border-blue-100'}`}>
                 <div className="flex items-center justify-between gap-4 mb-2">
                   <span className={`text-xs font-bold uppercase ${isAdmin ? 'text-slate-700' : 'text-blue-700'}`}>
-                    {isAdmin ? 'Compliance Team (You)' : 'Reporter'}
+                    {isAdmin ? `${t('userCase.complianceTeam')} (${t('userCase.you')})` : 'Reporter'}
                   </span>
                   <span className="text-xs text-slate-400">Just now</span>
                 </div>
@@ -276,7 +273,7 @@ const AdminCasePage = () => {
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
         <h3 className="flex items-center text-sm font-semibold text-slate-700 mb-3">
           <Shield className="w-4 h-4 mr-2" />
-          Official Response
+          {t('admin.officialResponse')}
         </h3>
         <textarea
           value={replyText}
@@ -294,7 +291,7 @@ const AdminCasePage = () => {
             className="ml-4 px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg flex items-center transition-colors disabled:opacity-50"
           >
             <Send className="w-4 h-4 mr-2" />
-            Send Reply
+            {t('userCase.sendReply')}
           </button>
         </div>
       </div>
@@ -305,20 +302,19 @@ const AdminCasePage = () => {
         onClose={() => { setShowStatusModal(false); setPendingStatus(null); }}
         onConfirm={confirmStatusChange}
         isLoading={statusMutation.isPending}
-        title={`Set status to ${formatStatus(pendingStatus)}?`}
+        title={t('admin.setStatusModalTitle', { status: formatStatus(pendingStatus) })}
         type="warning"
-        confirmLabel={`Confirm ${formatStatus(pendingStatus)}`}
+        confirmLabel={t('admin.setStatusModalConfirm', { status: formatStatus(pendingStatus) })}
         message={
           <div className="space-y-3">
             <div className="flex gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 text-sm">
               <AlertTriangle className="w-6 h-6 flex-shrink-0" />
               <p>
-                Setting a case to <strong>{formatStatus(pendingStatus)}</strong> typically signals the end of the investigation.
-                The whistleblower will see this update immediately using their Secret Key.
+                {t('admin.setStatusModalBody1', { status: formatStatus(pendingStatus) })}
               </p>
             </div>
             <p className="text-slate-600 text-sm">
-              Are you sure you want to mark this case as <strong>{formatStatus(pendingStatus)}</strong>?
+              {t('admin.setStatusModalBody2', { status: formatStatus(pendingStatus) })}
             </p>
           </div>
         }

@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Paperclip, X, FileText } from 'lucide-react';
 
 const AttachmentInput = ({ files, onChange, maxFiles = 3 }) => {
+  const { t } = useTranslation();
 
   const handleFileChange = (e) => {
     if (e.target.files) {
@@ -30,7 +32,7 @@ const AttachmentInput = ({ files, onChange, maxFiles = 3 }) => {
           `}
         >
           <Paperclip className="w-4 h-4 mr-2" />
-          Attach Files
+          {t('components.attachFiles')}
           <input
             id="file-upload"
             type="file"
@@ -41,7 +43,7 @@ const AttachmentInput = ({ files, onChange, maxFiles = 3 }) => {
             accept="*"
           />
         </label>
-        <span className="text-xs text-slate-500">Max 10MB (Images, PDF, Video, Docs)</span>
+        <span className="text-xs text-slate-500">{t('components.maxSize')}</span>
       </div>
 
       {files.length > 0 && (

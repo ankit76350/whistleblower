@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { fetchTenants } from '../store/tenantsSlice';
-import { Plus, Search, Building2, Mail, Calendar, CheckCircle2, XCircle, Loader2, Edit2, Trash2, X, Save, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Building2, Mail, Calendar, Loader2, Edit2, Trash2, X, Save, AlertTriangle } from 'lucide-react';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
 import Modal from '../components/Modal';
 
 const AdminTenantsPage = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -35,7 +37,7 @@ const AdminTenantsPage = () => {
   const createTenantMutation = useMutation({
     mutationFn: () => api.createTenant(formData.email, formData.companyName),
     onSuccess: () => {
-      toast.success('Tenant created successfully');
+      toast.success(t('admin.tenantCreated'));
       onMutationSuccess();
       setIsAdding(false);
       setModalType(null);
@@ -47,7 +49,7 @@ const AdminTenantsPage = () => {
   const updateTenantMutation = useMutation({
     mutationFn: ({ id, data }) => api.updateTenant(id, data),
     onSuccess: () => {
-      toast.success('Tenant updated successfully');
+      toast.success(t('admin.tenantUpdated'));
       onMutationSuccess();
       setEditingTenantId(null);
       setModalType(null);
@@ -60,7 +62,7 @@ const AdminTenantsPage = () => {
   const deleteTenantMutation = useMutation({
     mutationFn: (id) => api.deleteTenant(id),
     onSuccess: () => {
-      toast.success('Tenant deleted successfully');
+      toast.success(t('admin.tenantDeleted'));
       onMutationSuccess();
       setModalType(null);
       setPendingTenant(null);
@@ -79,7 +81,7 @@ const AdminTenantsPage = () => {
   // Submission Handlers (Open Modals)
   const handleCreateSubmit = (e) => {
     e.preventDefault();
-    if (!formData.email || !formData.companyName) return toast.error('Please fill in all fields');
+    if (!formData.email || !formData.companyName) return toast.error(t('admin.fillAllFields'));
     setModalType('create');
   };
 
@@ -112,8 +114,8 @@ const AdminTenantsPage = () => {
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Tenant Management</h1>
-          <p className="text-slate-500 text-sm">Manage organizations using the Whistleblower Box.</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('admin.tenantManagement')}</h1>
+          <p className="text-slate-500 text-sm">{t('admin.tenantSubtitle')}</p>
         </div>
         {!isAdding && !editingTenantId && (
           <button
@@ -121,7 +123,7 @@ const AdminTenantsPage = () => {
             className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Tenant
+            {t('admin.addTenant')}
           </button>
         )}
       </div>
@@ -130,7 +132,7 @@ const AdminTenantsPage = () => {
         <div className="bg-white border border-blue-100 rounded-xl p-6 mb-8 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-slate-800">
-              {isAdding ? 'Create New Tenant' : 'Update Tenant Info'}
+              {isAdding ? t('admin.createTenantTitle') : t('admin.updateTenantTitle')}
             </h2>
             <button
               onClick={() => { setIsAdding(false); setEditingTenantId(null); resetForm(); }}
@@ -141,7 +143,7 @@ const AdminTenantsPage = () => {
           </div>
           <form onSubmit={isAdding ? handleCreateSubmit : handleUpdateSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Company Name</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{t('admin.companyName')}</label>
               <input
                 type="text"
                 value={formData.companyName}
@@ -152,7 +154,7 @@ const AdminTenantsPage = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Admin Email</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{t('admin.adminEmail')}</label>
               <input
                 type="email"
                 value={formData.email}
@@ -168,7 +170,7 @@ const AdminTenantsPage = () => {
                 className="w-full h-[42px] bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg flex items-center justify-center transition-all"
               >
                 {isAdding ? <Plus className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                {isAdding ? 'Review & Create' : 'Review & Save'}
+                {isAdding ? t('admin.reviewCreate') : t('admin.reviewSave')}
               </button>
             </div>
           </form>
@@ -181,7 +183,7 @@ const AdminTenantsPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search tenants..."
+              placeholder={t('admin.searchTenants')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
@@ -193,11 +195,11 @@ const AdminTenantsPage = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Company</th>
-                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{t('admin.colCompany')}</th>
+                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{t('admin.colContact')}</th>
+                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{t('admin.colStatus')}</th>
+                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">{t('admin.colCreated')}</th>
+                <th className="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">{t('admin.colActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -205,20 +207,20 @@ const AdminTenantsPage = () => {
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                    Fetching tenants...
+                    {t('common.loading')}
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-red-500 font-medium">
                     <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
-                    Error: {error}
+                    {t('common.error')}: {error}
                   </td>
                 </tr>
               ) : filteredTenants?.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-medium">
-                    No tenants found matching your criteria.
+                    {t('admin.noTenants')}
                   </td>
                 </tr>
               ) : (
@@ -250,8 +252,8 @@ const AdminTenantsPage = () => {
                           : 'bg-slate-100 text-slate-600 border-slate-200 focus:ring-slate-400'
                           }`}
                       >
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
+                        <option value="true">{t('admin.active')}</option>
+                        <option value="false">{t('admin.inactive')}</option>
                       </select>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
@@ -265,14 +267,14 @@ const AdminTenantsPage = () => {
                         <button
                           onClick={() => startEdit(tenant)}
                           className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                          title="Edit"
+                          title={t('common.edit')}
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteRequest(tenant)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                          title="Delete"
+                          title={t('common.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -294,19 +296,19 @@ const AdminTenantsPage = () => {
         onClose={() => setModalType(null)}
         onConfirm={() => createTenantMutation.mutate()}
         isLoading={createTenantMutation.isPending}
-        title="Add New Tenant?"
+        title={t('admin.addTenantModalTitle')}
         type="info"
-        confirmLabel="Yes, Create Tenant"
+        confirmLabel={t('admin.addTenantConfirm')}
         message={
           <div className="space-y-3">
-            <p>Are you sure you want to add this tenant to the system?</p>
+            <p>{t('admin.addTenantModalBody')}</p>
             <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-slate-400 font-bold uppercase">Company:</span>
+                <span className="text-slate-400 font-bold uppercase">{t('admin.companyName')}:</span>
                 <span className="text-slate-900 font-semibold">{formData.companyName}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-slate-400 font-bold uppercase">Admin Email:</span>
+                <span className="text-slate-400 font-bold uppercase">{t('admin.adminEmail')}:</span>
                 <span className="text-slate-900 font-semibold">{formData.email}</span>
               </div>
             </div>
@@ -328,19 +330,19 @@ const AdminTenantsPage = () => {
           }
         }}
         isLoading={updateTenantMutation.isPending}
-        title="Update Tenant Info?"
+        title={t('admin.updateTenantModalTitle')}
         type="warning"
-        confirmLabel="Update Info"
+        confirmLabel={t('admin.updateTenantConfirm')}
         message={
           <div className="space-y-3">
-            <p>You are about to modify the information for this tenant. Please confirm the new details:</p>
+            <p>{t('admin.updateTenantModalBody')}</p>
             <div className="bg-amber-50 p-3 rounded-lg border border-amber-100 space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-amber-600 font-bold uppercase">New Company Name:</span>
+                <span className="text-amber-600 font-bold uppercase">{t('admin.newCompanyName')}:</span>
                 <span className="text-slate-900 font-semibold">{formData.companyName}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-amber-600 font-bold uppercase">New Admin Email:</span>
+                <span className="text-amber-600 font-bold uppercase">{t('admin.newAdminEmail')}:</span>
                 <span className="text-slate-900 font-semibold">{formData.email}</span>
               </div>
             </div>
@@ -357,16 +359,16 @@ const AdminTenantsPage = () => {
           data: { active: pendingStatus }
         })}
         isLoading={updateTenantMutation.isPending}
-        title="Change Tenant Status?"
+        title={t('admin.changeStatusModalTitle')}
         type="warning"
-        confirmLabel={`Switch to ${pendingStatus ? 'Active' : 'Inactive'}`}
+        confirmLabel={t('admin.changeStatusConfirm', { status: pendingStatus ? t('admin.active') : t('admin.inactive') })}
         message={
           <div className="space-y-3">
-            <p>Are you sure you want to change the status of <strong>{pendingTenant?.companyName}</strong>?</p>
+            <p>{t('admin.changeStatusModalBody1', { companyName: pendingTenant?.companyName })}</p>
             <p className="text-xs text-slate-500">
               {pendingStatus
-                ? "This will re-enable all whistleblower reporting features for this company."
-                : "This will suspend whistleblower reporting features for this company immediately."}
+                ? t('admin.changeStatusModalBodyActive')
+                : t('admin.changeStatusModalBodyInactive')}
             </p>
           </div>
         }
@@ -378,15 +380,14 @@ const AdminTenantsPage = () => {
         onClose={() => { setModalType(null); setPendingTenant(null); }}
         onConfirm={() => pendingTenant && deleteTenantMutation.mutate(pendingTenant.tenantId)}
         isLoading={deleteTenantMutation.isPending}
-        title="Delete Tenant Permanently?"
+        title={t('admin.deleteTenantModalTitle')}
         type="danger"
-        confirmLabel="Delete Everything"
+        confirmLabel={t('admin.deleteTenantConfirm')}
         message={
           <div className="space-y-3 text-red-700">
-            <p className="font-bold">This action is irreversible.</p>
+            <p className="font-bold">{t('admin.irreversibleAction')}</p>
             <p className="text-sm">
-              All data related to <strong>{pendingTenant?.companyName}</strong> will be removed from the system.
-              Whistleblowers will no longer be able to access their reports for this tenant.
+              {t('admin.deleteTenantModalBody', { companyName: pendingTenant?.companyName })}
             </p>
           </div>
         }
