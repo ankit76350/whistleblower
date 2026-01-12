@@ -18,7 +18,7 @@ import java.util.List;
 public class SecurityConfig {
 
     // Add your CloudFront domain here for production
-    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://whistleblower-deployment.s3-website.eu-central-1.amazonaws.com}")
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://whistleblower-deployment.s3-website.eu-central-1.amazonaws.com,https://d2bo88pls48js3.cloudfront.net}")
     private String allowedOrigins;
 
     @Bean
