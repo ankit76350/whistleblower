@@ -71,6 +71,7 @@ public class WhistleblowerController {
         @PutMapping("/admin/updateTenant/{tenantId}")
         public ResponseEntity<ApiResponse<Tenant>> updateTenant(@PathVariable String tenantId,
                         @RequestBody Tenant newTenantInfo) {
+
                 Tenant updatedTenant = service.updateTenant(tenantId, newTenantInfo);
                 ApiResponse<Tenant> response = ApiResponse.<Tenant>builder()
                                 .status("success")
