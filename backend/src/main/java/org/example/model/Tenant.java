@@ -35,6 +35,9 @@ public class Tenant {
     // HinSchG compliance flags
     private boolean active;
 
+    // Role (ADMIN, SUPERADMIN)
+    private String role;
+
     // Audit fields
     private Instant createdAt;
     private Instant updatedAt;

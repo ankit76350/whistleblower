@@ -41,6 +41,10 @@ public class TenantService {
         tenant.setCreatedAt(Instant.now());
         tenant.setActive(true);
 
+        if (tenant.getRole() == null || tenant.getRole().isBlank()) {
+            tenant.setRole("ADMIN");
+        }
+
         try {
             return repository.save(tenant);
         } catch (Exception e) {
@@ -82,6 +86,11 @@ public class TenantService {
         }
         repository.delete(existingTenant.get());
         return existingTenant.get();
+    }
+
+    public Tenant findByEmail(String email) {
+        return repository.findByEmail(email)
+                .orElseThrow(() -> new ApiException(404, "Tenant not found with email: " + email));
     }
 
 }
