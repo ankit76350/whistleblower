@@ -153,7 +153,9 @@
         "deleteTenantModalBody": "Alle Daten für {{companyName}} werden dauerhaft gelöscht.",
         "portalLogin": "Admin-Portal",
         "portalSubtitle": "Sicherer Zugang für Compliance-Beauftragte.",
-        "loginButton": "Login mit SSO"
+        "loginButton": "Login mit SSO",
+        "accountInactive": "Konto inaktiv",
+        "accountInactiveMessage": "Ihr Konto ist derzeit inaktiv. Dies kann an einer ausstehenden Zahlung oder einem abgelaufenen Testzeitraum liegen. Bitte wenden Sie sich an den Administrator, um den Zugriff wiederherzustellen."
     },
     "status": {
         "NEW": "Neu",

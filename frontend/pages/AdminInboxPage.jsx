@@ -51,13 +51,18 @@ const AdminInboxPage = () => {
 
   const isLoading = isLoadingTenants || (tenantId && isLoadingReports);
 
-  const filteredReports = reports
-    ?.filter((r) => filter === 'All' || r.status === filter)
-    .filter((r) =>
-      r.subject.toLowerCase().includes(search.toLowerCase()) ||
-      r.reportId.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => b.createdAt - a.createdAt);
+  // Check if tenant is inactive
+  const isInactive = userTenant && userTenant.active === false;
+
+  const filteredReports = isInactive
+    ? []
+    : reports
+      ?.filter((r) => filter === 'All' || r.status === filter)
+      .filter((r) =>
+        r.subject.toLowerCase().includes(search.toLowerCase()) ||
+        r.reportId.toLowerCase().includes(search.toLowerCase())
+      )
+      .sort((a, b) => b.createdAt - a.createdAt);
 
   if (isLoading) return <div className="p-10 text-center text-slate-500">{t('common.loading')}</div>;
 
@@ -117,7 +122,23 @@ const AdminInboxPage = () => {
 
         {/* List */}
         <div className="divide-y divide-slate-100">
-          {filteredReports?.length === 0 ? (
+          {isInactive ? (
+            <div className="p-12 text-center flex flex-col items-center text-slate-500">
+              <div className="bg-red-50 p-4 rounded-full mb-4">
+                <LogOut className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">{t('admin.accountInactive')}</h3>
+              <p className="max-w-md mx-auto mb-6">
+                {t('admin.accountInactiveMessage') || "Your account is currently inactive. This may be due to a pending payment or expired trial. Please contact the administrator to restore access."}
+              </p>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+              >
+                {t('admin.logout')}
+              </button>
+            </div>
+          ) : filteredReports?.length === 0 ? (
             <div className="p-12 text-center flex flex-col items-center text-slate-400">
               <Inbox className="w-12 h-12 mb-3 opacity-50" />
               <p>{t('admin.noReports')}</p>

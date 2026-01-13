@@ -153,7 +153,9 @@
     "deleteTenantModalBody": "All data for {{companyName}} will be permanently wiped.",
     "portalLogin": "Admin Portal",
     "portalSubtitle": "Secure access for compliance officers.",
-    "loginButton": "Login with SSO"
+    "loginButton": "Login with SSO",
+    "accountInactive": "Account Inactive",
+    "accountInactiveMessage": "Your account is currently inactive. This may be due to a pending payment or expired trial. Please contact the administrator to restore access."
   },
   "status": {
     "NEW": "New",
