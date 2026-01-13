@@ -38,9 +38,7 @@ const AdminCasePage = () => {
   const [replyText, setReplyText] = useState('');
   const [files, setFiles] = useState([]);
 
-  // Status change confirmation state
-  const [pendingStatus, setPendingStatus] = useState(null);
-  const [showStatusModal, setShowStatusModal] = useState(false);
+
 
   // Modal State
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -93,8 +91,10 @@ const AdminCasePage = () => {
       toast.success('Status updated');
       queryClient.invalidateQueries({ queryKey: ['report-admin', tenantId, id] });
       queryClient.invalidateQueries({ queryKey: ['admin-reports', tenantId] });
-      setShowStatusModal(false);
-      setPendingStatus(null);
+    },
+    onError: (error) => {
+      console.error('Status update failed:', error);
+      toast.error(`Failed to update status: ${error.message}`);
     }
   });
 
@@ -105,23 +105,7 @@ const AdminCasePage = () => {
   // Extract report and messages from the API response
   const { report, messages } = data;
 
-  const handleStatusSelect = (newStatus) => {
-    if (newStatus === report.status) return;
 
-    // Show warning for final statuses
-    if (newStatus === BackendStatus.Closed || newStatus === BackendStatus.Canceled) {
-      setPendingStatus(newStatus);
-      setShowStatusModal(true);
-    } else {
-      statusMutation.mutate(newStatus);
-    }
-  };
-
-  const confirmStatusChange = () => {
-    if (pendingStatus) {
-      statusMutation.mutate(pendingStatus);
-    }
-  };
 
   const getFileName = (key) => {
     if (!key) return 'File';
@@ -142,6 +126,8 @@ const AdminCasePage = () => {
       toast.error('Failed to open file');
     }
   };
+
+
 
   const activeStatus = report.status || BackendStatus.New;
   const formatStatus = (s) => t(`status.${s}`);
@@ -172,7 +158,7 @@ const AdminCasePage = () => {
           <span className="text-sm font-medium text-slate-700">{t('common.status')}:</span>
           <select
             value={activeStatus}
-            onChange={(e) => handleStatusSelect(e.target.value)}
+            onChange={(e) => statusMutation.mutate(e.target.value)}
             className="border border-slate-300 rounded-lg py-2 pl-3 pr-8 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white font-medium"
           >
             {Object.values(BackendStatus).map(s => (
@@ -296,31 +282,6 @@ const AdminCasePage = () => {
         </div>
       </div>
 
-      {/* Status Change Confirmation Modal */}
-      <Modal
-        isOpen={showStatusModal}
-        onClose={() => { setShowStatusModal(false); setPendingStatus(null); }}
-        onConfirm={confirmStatusChange}
-        isLoading={statusMutation.isPending}
-        title={t('admin.setStatusModalTitle', { status: formatStatus(pendingStatus) })}
-        type="warning"
-        confirmLabel={t('admin.setStatusModalConfirm', { status: formatStatus(pendingStatus) })}
-        message={
-          <div className="space-y-3">
-            <div className="flex gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 text-sm">
-              <AlertTriangle className="w-6 h-6 flex-shrink-0" />
-              <p>
-                {t('admin.setStatusModalBody1', { status: formatStatus(pendingStatus) })}
-              </p>
-            </div>
-            <p className="text-slate-600 text-sm">
-              {t('admin.setStatusModalBody2', { status: formatStatus(pendingStatus) })}
-            </p>
-          </div>
-        }
-      />
-
-      {/* File Preview Modal */}
       <FilePreviewModal
         isOpen={previewOpen}
         onClose={() => setPreviewOpen(false)}

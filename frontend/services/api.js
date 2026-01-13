@@ -146,6 +146,24 @@ export const api = {
     }
   },
 
+  updateReportStatus: async (reportId, status) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/whistleblower/reports/${reportId}/status?status=${status}`, {
+        method: 'PUT',
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      throw error;
+    }
+  },
+
   replyToReport: async (reportId, message, sender = 'COMPLIANCE_TEAM', files) => {
     try {
       // Process attachments if any
@@ -204,9 +222,7 @@ export const api = {
     }
   },
 
-  updateReportStatus: async (reportId, status) => {
-    return MockBackend.updateStatus(reportId, status);
-  },
+
 
   // Tenant Management
   getTenants: async () => {
