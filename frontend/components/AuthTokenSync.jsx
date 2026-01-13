@@ -10,12 +10,13 @@ const AuthTokenSync = ({ children }) => {
     const auth = useAuth();
 
     useEffect(() => {
-        if (auth.isAuthenticated && auth.user?.access_token) {
-            setAuthToken(auth.user.access_token);
+        if (auth.isAuthenticated) {
+            // Prefer ID Token as it contains user attributes (claims) like email
+            setAuthToken(auth.user?.id_token || auth.user?.access_token);
         } else {
             setAuthToken(null);
         }
-    }, [auth.isAuthenticated, auth.user?.access_token]);
+    }, [auth.isAuthenticated, auth.user?.access_token, auth.user?.id_token]);
 
     return children;
 };

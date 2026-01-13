@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from 'react-oidc-context';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchTenants } from '../store/tenantsSlice';
 import { Plus, Search, Building2, Mail, Calendar, Loader2, Edit2, Trash2, X, Save, AlertTriangle } from 'lucide-react';
-import { api } from '../services/api';
+
+import { api, setAuthToken } from '../services/api';
 import toast from 'react-hot-toast';
 import Modal from '../components/Modal';
 
 const AdminTenantsPage = () => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
+
+  const auth = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingTenantId, setEditingTenantId] = useState(null);
+
+  // RBAC State
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
 
   // Modal State
   const [modalType, setModalType] = useState(null);
@@ -27,8 +34,38 @@ const AdminTenantsPage = () => {
   const { items: tenants, loading: isLoading, error } = useSelector((state) => state.tenants);
 
   useEffect(() => {
-    dispatch(fetchTenants());
-  }, [dispatch]);
+    if (auth.isLoading) return;
+
+    // Check for SUPERADMIN role
+    const checkAccess = async () => {
+      try {
+        const token = auth.user?.id_token || auth.user?.access_token;
+        if (token) {
+          setAuthToken(token);
+        }
+
+        const user = await api.getCurrentUser();
+        if (user && user.role === 'SUPERADMIN') {
+          setIsSuperAdmin(true);
+          dispatch(fetchTenants());
+        } else {
+          setIsSuperAdmin(false);
+        }
+      } catch (err) {
+        console.error("Failed to check access:", err);
+        setIsSuperAdmin(false);
+      } finally {
+        setCheckingAccess(false);
+      }
+    };
+
+    if (auth.isAuthenticated) {
+      checkAccess();
+    } else {
+      // failed auth
+      setCheckingAccess(false);
+    }
+  }, [dispatch, auth.isLoading, auth.isAuthenticated, auth.user?.access_token, auth.user?.id_token]);
 
   const onMutationSuccess = () => {
     dispatch(fetchTenants());
@@ -104,11 +141,33 @@ const AdminTenantsPage = () => {
   };
 
   const tenantsList = Array.isArray(tenants) ? tenants : [];
+
+
   const filteredTenants = tenantsList.filter(t =>
     t.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.tenantId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (checkingAccess) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="max-w-6xl mx-auto text-center py-20 animate-in fade-in duration-500">
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <h1 className="text-3xl font-bold text-slate-800 mb-2">Access Denied</h1>
+        <p className="text-slate-500">You must be a <span className="font-semibold text-slate-900">SUPERADMIN</span> to view this page.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto">

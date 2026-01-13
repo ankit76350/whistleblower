@@ -227,7 +227,7 @@ export const api = {
     }
   },
 
-  createTenant: async (email, companyName) => {
+  createTenant: async (email, companyName, role="ADMIN") => {
     try {
       // Step 1: Create tenant in MongoDB
       const response = await fetch(`${API_BASE_URL}/whistleblower/admin/addNewTenant`, {
@@ -236,7 +236,7 @@ export const api = {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ email, companyName }),
+        body: JSON.stringify({ email, companyName, role }),
       });
       if (!response.ok) {
         throw new Error('Failed to create tenant');
@@ -252,7 +252,7 @@ export const api = {
         },
         body: JSON.stringify({
           email,
-          role: 'ADMIN'  // Hardcoded role
+          role: role  // Hardcoded role
         }),
       });
 
@@ -264,6 +264,24 @@ export const api = {
       return tenantData.data; // Backend returns ApiResponse wrapper with data field
     } catch (error) {
       console.error('Error creating tenant:', error);
+      throw error;
+    }
+  },
+
+  getCurrentUser: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/me`, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch current user');
+      }
+      const data = await response.json();
+      return data.data; // Backend returns ApiResponse wrapper with data field
+    } catch (error) {
+      console.error('Error fetching current user:', error);
       throw error;
     }
   },

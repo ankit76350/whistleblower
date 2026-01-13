@@ -3,13 +3,47 @@ import { Link, useLocation } from 'react-router-dom';
 import { Shield, Lock, Briefcase, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
+import { api, setAuthToken } from '../services/api';
+import { useAuth } from 'react-oidc-context';
 
 
 const Layout = ({ children }) => {
   const { t } = useTranslation();
   const location = useLocation();
+  const auth = useAuth();
 
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isAdminRoute) {
+      if (auth.isLoading) return; // Wait for auth to load
+
+      const checkRole = async () => {
+        try {
+          // Ensure token is set to avoid race condition with AuthTokenSync
+          // Use ID Token if available to ensure email claim is present
+          const token = auth.user?.id_token || auth.user?.access_token;
+          if (token) {
+            setAuthToken(token);
+          }
+
+          const user = await api.getCurrentUser();
+          if (user && user.role === 'SUPERADMIN') {
+            setIsSuperAdmin(true);
+          } else {
+            setIsSuperAdmin(false);
+          }
+        } catch (e) {
+          console.error("Failed to check role", e);
+          setIsSuperAdmin(false);
+        }
+      };
+      if (auth.isAuthenticated) {
+        checkRole();
+      }
+    }
+  }, [isAdminRoute, auth.isLoading, auth.isAuthenticated, auth.user?.access_token, auth.user?.id_token]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -44,10 +78,13 @@ const Layout = ({ children }) => {
                 <Link to="/admin/inbox" className={`text-sm font-medium ${location.pathname.includes('/admin/inbox') ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>
                   {t('layout.inbox')}
                 </Link>
-                <Link to="/admin/tenants" className={`text-sm font-medium flex items-center ${location.pathname === '/admin/tenants' ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>
-                  <Users className="w-4 h-4 mr-1" />
-                  {t('layout.tenants')}
-                </Link>
+                {isSuperAdmin && (
+                  <Link to="/admin/tenants" className={`text-sm font-medium flex items-center ${location.pathname === '/admin/tenants' ? 'text-blue-600' : 'text-slate-600 hover:text-blue-600'}`}>
+                    <Users className="w-4 h-4 mr-1" />
+                    {t('layout.tenants')}
+                  </Link>
+                )}
+
               </div>
             )}
           </div>
