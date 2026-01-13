@@ -33,7 +33,7 @@ public class Tenant {
     private String companyName;
 
     // HinSchG compliance flags
-    private boolean active;
+    private Boolean active;
 
     // Role (ADMIN, SUPERADMIN)
     private String role;

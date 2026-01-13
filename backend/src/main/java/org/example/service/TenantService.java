@@ -68,10 +68,17 @@ public class TenantService {
         Tenant existingTenant = repository.findByTenantId(tenantId)
                 .orElseThrow(() -> new ApiException(404, "Tenant not found with tenantId: " + tenantId));
 
-        // ✅ Update ONLY allowed fields
-        existingTenant.setCompanyName(newTenantInfo.getCompanyName());
-        existingTenant.setEmail(newTenantInfo.getEmail());
-        existingTenant.setActive(newTenantInfo.isActive());
+        // ✅ Update fields ONLY if they are present in the request
+        if (newTenantInfo.getCompanyName() != null && !newTenantInfo.getCompanyName().isBlank()) {
+            existingTenant.setCompanyName(newTenantInfo.getCompanyName());
+        }
+        if (newTenantInfo.getEmail() != null && !newTenantInfo.getEmail().isBlank()) {
+            existingTenant.setEmail(newTenantInfo.getEmail());
+        }
+
+        if (newTenantInfo.getActive() != null) {
+            existingTenant.setActive(newTenantInfo.getActive());
+        }
 
         // ✅ Audit
         existingTenant.setUpdatedAt(Instant.now());
