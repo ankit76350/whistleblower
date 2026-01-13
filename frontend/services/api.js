@@ -227,7 +227,7 @@ export const api = {
     }
   },
 
-  createTenant: async (email, companyName, role="ADMIN") => {
+  createTenant: async (email, companyName, role = "ADMIN") => {
     try {
       // Step 1: Create tenant in MongoDB
       const response = await fetch(`${API_BASE_URL}/whistleblower/admin/addNewTenant`, {
