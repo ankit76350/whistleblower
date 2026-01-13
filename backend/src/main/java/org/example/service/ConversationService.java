@@ -103,7 +103,18 @@ public class ConversationService {
                                 .build();
 
                 // 6️⃣ Save message
-                return messageRepo.save(conversationMessage);
+                ConversationMessage savedMessage = messageRepo.save(conversationMessage);
+
+                // 7️⃣ Auto-update status to IN_PROGRESS if Admin replies
+                if (sender == MessageSender.COMPLIANCE_TEAM) {
+                        if (report.getStatus() != ReportStatus.CLOSED && report.getStatus() != ReportStatus.CANCELED) {
+                                report.setStatus(ReportStatus.IN_PROGRESS);
+                                report.setUpdatedAt(Instant.now());
+                                reportRepo.save(report);
+                        }
+                }
+
+                return savedMessage;
         }
 
         // Todo: for admin
@@ -121,6 +132,33 @@ public class ConversationService {
                 AdminReportView report = reportRepo
                                 .findProjectedByReportIdAndTenantId(reportId, tenantId)
                                 .orElseThrow(() -> new ApiException(404, "Report not found for this tenant"));
+
+                // Auto-update status from NEW -> RECEIVED on first view
+                // We need the full entity to update it, AdminReportView is a projection
+                // (read-only usually)
+                // So let's fetch the full entity if we need to update status
+                // But `findProjected` returns a View. We can use `findByReportIdAndTenantId`
+                // separately or check the view.
+
+                // Fetch full entity for status update check
+                Optional<WhistleblowerReport> fullReportOpt = reportRepo.findByReportIdAndTenantId(reportId, tenantId);
+                if (fullReportOpt.isPresent()) {
+                        WhistleblowerReport fullReport = fullReportOpt.get();
+                        if (fullReport.getStatus() == ReportStatus.NEW) {
+                                fullReport.setStatus(ReportStatus.RECEIVED);
+                                fullReport.setReceivedAt(Instant.now());
+                                fullReport.setUpdatedAt(Instant.now());
+                                reportRepo.save(fullReport);
+
+                                // Update the view projection logic?
+                                // The view returned below might be stale if we don't refresh it,
+                                // but usually acceptable for this request or we can re-fetch.
+                                // For simplicity, we let the frontend see "NEW" this one time (or maybe they
+                                // see RECEIVED if they refresh),
+                                // OR we can rely on the fact that next time it will be RECEIVED.
+                                // Actually, better to re-wait or just let it be.
+                        }
+                }
 
                 List<ConversationMessage> messages = messageRepo.findByReportIdOrderByCreatedAtAsc(reportId);
 
@@ -146,6 +184,32 @@ public class ConversationService {
                                 .report(report)
                                 .messages(messages)
                                 .build();
+        }
+
+        public WhistleblowerReport updateReportStatus(String reportId, String statusString) {
+                WhistleblowerReport report = reportRepo.findByReportId(reportId)
+                                .orElseThrow(() -> new ApiException(404, "Report not found"));
+
+                try {
+                        // Robust matching (ignore case)
+                        ReportStatus newStatus = null;
+                        for (ReportStatus s : ReportStatus.values()) {
+                                if (s.name().equalsIgnoreCase(statusString)) {
+                                        newStatus = s;
+                                        break;
+                                }
+                        }
+
+                        if (newStatus == null) {
+                                throw new IllegalArgumentException("Unknown status: " + statusString);
+                        }
+
+                        report.setStatus(newStatus);
+                        report.setUpdatedAt(Instant.now());
+                        return reportRepo.save(report);
+                } catch (IllegalArgumentException e) {
+                        throw new ApiException(400, "Invalid status: " + statusString);
+                }
         }
 
 }

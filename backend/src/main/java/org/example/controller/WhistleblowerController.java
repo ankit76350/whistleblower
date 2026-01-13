@@ -180,6 +180,15 @@ public class WhistleblowerController {
                                 conversationService.getReportWithConversation(tenantId, reportId));
         }
 
+        // Update Report Status (Manual)
+        @PutMapping("/reports/{reportId}/status")
+        public ResponseEntity<WhistleblowerReport> updateReportStatus(
+                        @PathVariable String reportId,
+                        @RequestParam String status) {
+                return ResponseEntity.ok(
+                                conversationService.updateReportStatus(reportId, status));
+        }
+
         // Public – access by secret key
         @GetMapping("/report/{secretKey}/conversation")
         public ResponseEntity<ReportWithConversationResponse> getConversation(
