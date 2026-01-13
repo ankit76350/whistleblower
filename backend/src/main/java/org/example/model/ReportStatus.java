@@ -4,5 +4,6 @@ public enum ReportStatus {
     NEW,
     RECEIVED,
     IN_PROGRESS,
-    CLOSED
+    CLOSED,
+    Canceled
 }
